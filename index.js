@@ -1,11 +1,12 @@
-let projectDB = [
-    { sectionId: 0, sectionName: "Section 1", taskList: [
-        { id: 0, name: "Task 1", checked: true },
-        { id: 1, name: "Task 2", checked: false }
-    ] },
-    { sectionId: 1, sectionName: "Section 2", taskList: [
-        { id: 2, name: "Task 1", checked: false },
-    ] }
+let tasksDb = [
+    { id: 0, name: "Task 1", checked: true, sectionId: 0 },
+    { id: 1, name: "Task 2", checked: false, sectionId: 0 },
+    { id: 2, name: "Task 1", checked: false, sectionId: 1 }
+]
+
+let sectionsDb = [
+    { id: 0, sectionName: "Section 1" },
+    { id: 1, sectionName: "Section 2" }
 ]
 
 // back-end
@@ -30,19 +31,25 @@ function createTask(name, sectionId) {
     console.log(findSection)
 }
 
-function renameTask(newName, taskId) {
+function findTaskIndexById(taskId) {
+    let findTaskIndex;
     for (const section of projectDB) {
-        const findTaskIndex = section.taskList.findIndex(task => task.id === taskId)
+        findTaskIndex = section.taskList.findIndex(task => task.id === taskId)
 
-        if (findTaskIndex !== -1) {
-            section.taskList[findTaskIndex].name = newName
-            break
-        }
+        if (findTaskIndex !== -1) return [section, findTaskIndexById]
     }
+    return false
 }
 
-function toggleChekedState() {
+function renameTask(newName, taskId) {
+    const findTaskIndex = findTaskById(taskId)
+    if (!findIndex) return
 
+    console.log(findIndex[0], findIndex[1])
+}
+
+function toggleChekedState(isChecked, taskId) {
+    
 }
 
 
