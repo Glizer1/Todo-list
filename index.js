@@ -33,8 +33,15 @@ function updateTask() {
 
 }
 
-function deleteTask() {
+function deleteTask(taskId) {
+    for (const section of projectDB) {
+        const findTaskIndex = section.taskList.findIndex(task => task.id === taskId)
 
+        if (findTaskIndex !== -1) {
+            section.taskList.splice(findTaskIndex, 1)
+            break
+        }
+    }
 }
 
 // Others
