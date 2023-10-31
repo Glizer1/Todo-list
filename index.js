@@ -22,13 +22,13 @@ let sectionsDb = [
 // CRUD:
 
 function createTask(name, sectionId) {
-    const findSection = projectDB.find(section => sectionId === section.sectionId)
+    const findSection = sectionsDb.find(section => sectionId === section.id)
     if (!findSection) return
 
     const createId = generateId()
-    findSection.taskList.push({ id: createId, name, checked: false })
+    tasksDb.push({ id: createId, name, checked: false, sectionId })
 
-    console.log(findSection)
+    console.log(tasksDb)
 }
 
 function findTaskIndexById(taskId) {
