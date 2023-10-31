@@ -10,8 +10,9 @@ let projectDB = [
 
 // back-end
 /**
- - CreateTask
- - updateTask
+ - createTask
+ - renameTask
+ - toggleChekedState
  - deleteTask
  - generateId
  */
@@ -29,9 +30,21 @@ function createTask(name, sectionId) {
     console.log(findSection)
 }
 
-function updateTask() {
+function renameTask(newName, taskId) {
+    for (const section of projectDB) {
+        const findTaskIndex = section.taskList.findIndex(task => task.id === taskId)
+
+        if (findTaskIndex !== -1) {
+            section.taskList[findTaskIndex].name = newName
+            break
+        }
+    }
+}
+
+function toggleChekedState() {
 
 }
+
 
 function deleteTask(taskId) {
     for (const section of projectDB) {
