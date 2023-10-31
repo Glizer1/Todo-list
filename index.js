@@ -32,13 +32,10 @@ function createTask(name, sectionId) {
 }
 
 function findTaskIndexById(taskId) {
-    let findTaskIndex;
-    for (const section of projectDB) {
-        findTaskIndex = section.taskList.findIndex(task => task.id === taskId)
+    const findTaskIndex = tasksDb.findIndex(task => taskId === task.id)
+    if (!findTaskIndex) return
 
-        if (findTaskIndex !== -1) return [section, findTaskIndexById]
-    }
-    return false
+    return findTaskIndex
 }
 
 function renameTask(newName, taskId) {
