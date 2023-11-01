@@ -1,12 +1,12 @@
 let tasksDb = [
-    { id: 0, name: "Task 1", checked: true, sectionId: 0 },
-    { id: 1, name: "Task 2", checked: false, sectionId: 0 },
+    { id: 0, name: "Task 1", checked: false, sectionId: 0 },
+    { id: 1, name: "Task 2", checked: true, sectionId: 0 },
     { id: 2, name: "Task 1", checked: false, sectionId: 1 }
 ]
 
 let sectionsDb = [
-    { id: 0, sectionName: "Section 1" },
-    { id: 1, sectionName: "Section 2" }
+    { id: 1, sectionName: "Section 1" },
+    { id: 2, sectionName: "Section 2" }
 ]
 
 // back-end
@@ -28,21 +28,22 @@ function createTask(name, sectionId) {
     const createId = generateId()
     tasksDb.push({ id: createId, name, checked: false, sectionId })
 
-    console.log(tasksDb)
+    console.log("createTask => ", tasksDb)
 }
 
 function findTaskIndexById(taskId) {
     const findTaskIndex = tasksDb.findIndex(task => taskId === task.id)
-    if (!findTaskIndex) return
+    if (findTaskIndex === -1) return false
 
     return findTaskIndex
 }
 
 function renameTask(newName, taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
-    if (!findIndex) return
+    if (findTaskIndex === false) return
 
-    console.log(findIndex[0], findIndex[1])
+    tasksDb[findTaskIndex].name = newName
+    console.log("renameTask => ", tasksDb, tasksDb[findTaskIndex])
 }
 
 function toggleChekedState(isChecked, taskId) {
@@ -52,11 +53,10 @@ function toggleChekedState(isChecked, taskId) {
 
 function deleteTask(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
-    console.log(findTaskIndex)
-    if (!findTaskIndex) return
+    if (findTaskIndex === false) return
 
     tasksDb.splice(findTaskIndex, 1)
-    console.log(tasksDb)
+    console.log("deleteTask => ", tasksDb)
 }
 
 // Others
