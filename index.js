@@ -61,6 +61,17 @@ function toggleChekedState(isChecked, taskId) {
     console.log("toggleCheckedState => ", tasksDb[findTaskIndex])
 }
 
+function changeTaskSection(taskId, sectionId) {
+    const findSection = sectionsDb.find(section => sectionId === section.id)
+    if (!findSection) return
+
+    const findTaskIndex = findTaskIndexById(taskId)
+    if (findTaskIndex === false) return
+
+    tasksDb[findTaskIndex].sectionId = sectionId
+    console.log("changeTaskSection => ", tasksDb[findTaskIndex])
+}
+
 
 function deleteTask(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
