@@ -39,7 +39,7 @@ function findTaskIndexById(taskId) {
 }
 
 function renameTask(newName, taskId) {
-    const findTaskIndex = findTaskById(taskId)
+    const findTaskIndex = findTaskIndexById(taskId)
     if (!findIndex) return
 
     console.log(findIndex[0], findIndex[1])
@@ -51,14 +51,12 @@ function toggleChekedState(isChecked, taskId) {
 
 
 function deleteTask(taskId) {
-    for (const section of projectDB) {
-        const findTaskIndex = section.taskList.findIndex(task => task.id === taskId)
+    const findTaskIndex = findTaskIndexById(taskId)
+    console.log(findTaskIndex)
+    if (!findTaskIndex) return
 
-        if (findTaskIndex !== -1) {
-            section.taskList.splice(findTaskIndex, 1)
-            break
-        }
-    }
+    tasksDb.splice(findTaskIndex, 1)
+    console.log(tasksDb)
 }
 
 // Others
