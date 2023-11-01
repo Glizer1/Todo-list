@@ -6,8 +6,8 @@ let tasksDb = [
 ]
 
 let sectionsDb = [
-    { id: 1, sectionName: "Section 1" },
-    { id: 2, sectionName: "Section 2" }
+    { id: 0, sectionName: "Section 1" },
+    { id: 1, sectionName: "Section 2" }
 ]
 
 // back-end
@@ -23,6 +23,8 @@ let sectionsDb = [
 // CRUD:
 
 function createTask(name, sectionId) {
+    if (typeof name !== "string") return
+
     const findSection = sectionsDb.find(section => sectionId === section.id)
     if (!findSection) return
 
@@ -40,6 +42,8 @@ function findTaskIndexById(taskId) {
 }
 
 function renameTask(newName, taskId) {
+    if (typeof newName !== "string") return
+
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
