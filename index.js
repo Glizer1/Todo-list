@@ -1,3 +1,4 @@
+
 let tasksDb = [
     { id: 0, name: "Task 1", checked: false, sectionId: 0 },
     { id: 1, name: "Task 2", checked: true, sectionId: 0 },
@@ -47,7 +48,13 @@ function renameTask(newName, taskId) {
 }
 
 function toggleChekedState(isChecked, taskId) {
+    if (typeof isChecked !== "boolean") return
     
+    const findTaskIndex = findTaskIndexById(taskId)
+    if (findTaskIndex === false) return
+
+    tasksDb[findTaskIndex].checked = isChecked
+    console.log("toggleCheckedState => ", tasksDb[findTaskIndex])
 }
 
 
