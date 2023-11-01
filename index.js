@@ -10,7 +10,7 @@ let sectionsDb = [
     { id: 1, sectionName: "Section 2" }
 ]
 
-// back-end
+// -- backEnd --
 /**
  - createTask
  - renameTask
@@ -21,7 +21,6 @@ let sectionsDb = [
 
  
 // CRUD:
-
 function createTask(name, sectionId) {
     if (typeof name !== "string") return
 
@@ -88,3 +87,32 @@ function generateId() {
 
     return randomString + date
 }
+
+// -- frontEnd -- 
+
+function addTask(event) {
+    console.log(event)
+
+    const taskPreviewTemplate = `
+        <div class="task">
+            <input type="checkbox" class="task-checkbox">
+            <div class="task-title">
+                <span class="task-text"></span>
+                <input type="text" class="task-name-input" placeholder="Task name">
+            </div>
+        </div>
+    `
+    const target = event.target
+    const taskList = target.parentElement.previousElementSibling
+    
+    taskList.insertAdjacentHTML('beforeend', taskPreviewTemplate);
+
+    const input = taskList.lastElementChild.querySelector('.task-name-input')
+    console.log(input)
+    input.focus()
+}
+
+const addTaskButton = document.querySelectorAll('.add-task-button')
+addTaskButton.forEach(button => {
+    button.addEventListener('click', addTask)
+})
