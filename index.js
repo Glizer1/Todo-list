@@ -91,7 +91,6 @@ function generateId() {
 // -- frontEnd -- 
 
  // createTask system:
-
 function addPreviewTask(event) {
     console.log(event)
 
@@ -106,46 +105,18 @@ function addPreviewTask(event) {
     
     taskList.insertAdjacentHTML('beforeend', taskPreviewTemplate);
 
-    const input = taskList.lastElementChild
-    input.focus()
+    const inputName = taskList.lastElementChild
 
-    addEventListeners(input)
-}
-
-function addEventListeners(input) {
-    input.addEventListener('blur', handleEnterTaskName)
+    inputName.addEventListener('blur', handleEnterTaskName)
     
 
-    input.addEventListener('keydown', (event) => {
-        const keyPressed = event.key
-    
-        if (keyPressed === 'Enter') {
+    inputName.addEventListener('keydown', (event) => {    
+        if (event.key === 'Enter') {
             handleEnterTaskName(event)
         }
     })
-}
 
-function removeEventListeners(input) {
-    input.removeEventListener('blur', handleEnterTaskName)
-}
-
-function handleEnterTaskName(event) {
-    const input = event.target
-    removeEventListeners(input)
-
-    const taskName = input.value.trim()
-
-    const sectionId = input.closest('.project-section').dataset.sectionid
-
-    const taskList = input.closest('.task-list')
-    const previewTask = taskList.lastElementChild
-    taskList.removeChild(previewTask)
-
-    if (taskName) {
-        createTask(taskName, sectionId)
-
-        updateTaskList()
-    }
+    inputName.focus()
 }
 
 function createTaskItem(taskName, taskStatus, taskId, sectionId) {
@@ -177,11 +148,88 @@ function updateTaskList() {
     tasksDb.forEach(taskList => createTaskItem(taskList.name, taskList.status, taskList.id, taskList.sectionId))
 }
 
+function handleEnterTaskName(event) {
+    const input = event.target
+    removeEventListeners(input)
+
+    const taskName = input.value.trim()
+
+    const sectionId = input.closest('.project-section').dataset.sectionid
+
+    const taskList = input.closest('.task-list')
+    const previewTask = taskList.lastElementChild
+    taskList.removeChild(previewTask)
+
+    if (taskName) {
+        createTask(taskName, sectionId)
+
+        updateTaskList()
+    }
+}
+
+ 
+// renameTask system
+function showRenameInput(event) {
+    const target = event.target
+    console.log(target)
+    
+    const renameInput = `
+    <input type="text" class="task-name-input" placeholder="Task name">
+    `
+    const taskTitle = target.querySelector('.task-text')
+    console.log(taskTitle)
+    
+    taskTitle.style.display = 'none' // Mudar: add em css
+    taskTitle.insertAdjacentHTML('afterend', renameInput);
+
+    const inputName = taskTitle.nextElementSibling
+
+    inputName.addEventListener('blur', handleRenameTask)
+    
+
+    inputName.addEventListener('keydown', (event) => {    
+        if (event.key === 'Enter') {
+            handleRenameTask(event)
+        }
+    })
+
+    inputName.focus()
+}
+
+function handleRenameTask(event) {
+    const input = event.target
+    removeEventListeners(input)
+
+    const taskName = input.value.trim()
+    const taskId = input.closest('.task').dataset.taskid
+    console.log(taskId)
+
+    const taskList = input.closest('.task-list')
+    const previewTask = taskList.lastElementChild
+    taskList.removeChild(previewTask)
+
+    if (taskName) {
+        renameTask(taskName, taskId)
+
+        updateTaskList()
+    }
+}
+
+// outros
+
+// event liteners: 
+
+function removeEventListeners(input) {
+    input.removeEventListener('blur', handleEnterTaskName)
+    input.removeEventListener('blur', handleRenameTask)
+}
+
+const taskTitles = document.querySelectorAll('.task-title')
+taskTitles.forEach(taskTitle => taskTitle.addEventListener('dblclick', showRenameInput))
 
 
-const addTaskButton = document.querySelectorAll('.add-task-button')
-addTaskButton.forEach(button => {
-    button.addEventListener('click', addPreviewTask)
-})
+
+const addTaskButtons = document.querySelectorAll('.add-task-button')
+addTaskButtons.forEach(button => button.addEventListener('click', addPreviewTask))
 
 
