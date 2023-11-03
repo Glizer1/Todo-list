@@ -1,8 +1,8 @@
 
 let tasksDb = [
-    { id: '0', name: "Task 1", checked: false, sectionId: '0' },
-    { id: '1', name: "Task 2", checked: true, sectionId: '0' },
-    { id: '2', name: "Task 1", checked: false, sectionId: '1' }
+    { id: '0', name: "Task 1", status: false, sectionId: '0' },
+    { id: '1', name: "Task 2", status: true, sectionId: '0' },
+    { id: '2', name: "Task 1", status: false, sectionId: '1' }
 ]
 
 let sectionsDb = [
@@ -28,7 +28,7 @@ function createTask(name, sectionId) {
     if (!findSection) return
 
     const createId = generateId()
-    tasksDb.push({ id: createId, name, checked: false, sectionId })
+    tasksDb.push({ id: createId, name, status: false, sectionId })
 
     console.log("createTask => ", tasksDb)
 }
@@ -50,14 +50,14 @@ function renameTask(newName, taskId) {
     console.log("renameTask => ", tasksDb, tasksDb[findTaskIndex])
 }
 
-function toggleChekedState(isChecked, taskId) {
-    if (typeof isChecked !== "boolean") return
+function toggleTaskStatus(status, taskId) {
+    if (typeof status !== "boolean") return
     
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
-    tasksDb[findTaskIndex].checked = isChecked
-    console.log("toggleCheckedState => ", tasksDb[findTaskIndex])
+    tasksDb[findTaskIndex].status = status
+    console.log("toggleTaskStatus => ", tasksDb[findTaskIndex])
 }
 
 function changeTaskSection(taskId, sectionId) {
@@ -90,12 +90,7 @@ function generateId() {
 
 // -- frontEnd -- 
 
-// etapas para add Task
-/**
- 1. clicar Add task: adiconar um preview de task com input para o nome
- 2. verificar ao mandar input: verifica se o nome está dentro dos parametros
- 3. Cria a task na DB: chama a funçao de criar task
- */
+ // createTask system:
 
 function addPreviewTask(event) {
     console.log(event)
@@ -104,20 +99,14 @@ function addPreviewTask(event) {
     const section = target.closest('.project-section')
 
     const taskPreviewTemplate = `
-        <div class="task">
-            <input type="checkbox" class="task-checkbox">
-            <div class="task-title">
-                <span class="task-text"></span>
-                <input type="text" class="task-name-input" placeholder="Task name">
-            </div>
-        </div>
+        <input type="text" class="task-name-input" placeholder="Task name">
     `
-    
+
     const taskList = section.querySelector('.task-list')
     
     taskList.insertAdjacentHTML('beforeend', taskPreviewTemplate);
 
-    const input = taskList.lastElementChild.querySelector('.task-name-input')
+    const input = taskList.lastElementChild
     input.focus()
 
     addEventListeners(input)
@@ -148,17 +137,47 @@ function handleEnterTaskName(event) {
 
     const sectionId = input.closest('.project-section').dataset.sectionid
 
+    const taskList = input.closest('.task-list')
+    const previewTask = taskList.lastElementChild
+    taskList.removeChild(previewTask)
+
     if (taskName) {
         createTask(taskName, sectionId)
-        
-        input.style.display = 'none' // Mudar: add in css
-    } else {
-        const taskList = input.closest('.task-list')
-        const previewTask = taskList.lastElementChild
-        taskList.removeChild(previewTask)
-    }
 
+        updateTaskList()
+    }
 }
+
+function createTaskItem(taskName, taskStatus, taskId, sectionId) {
+        const newTask = `
+            <div class="task" data-taskId="${taskId}">
+                <input type="checkbox" class="task-checkbox" ${taskStatus}>
+                <div class="task-title">
+                    <span class="task-text">${taskName}</span>
+                </div>
+            </div>
+        `
+
+        const section = document.querySelector(`[data-sectionId="${sectionId}"]`)
+        const taskList = section.querySelector('.task-list')
+    
+        taskList.insertAdjacentHTML('beforeend', newTask);
+}
+ 
+function clearTaskList() {
+    const taskList = document.querySelectorAll('.task')
+    taskList.forEach(task => {
+        task.remove()
+    })
+}
+
+function updateTaskList() {
+    clearTaskList()
+
+    tasksDb.forEach(taskList => createTaskItem(taskList.name, taskList.status, taskList.id, taskList.sectionId))
+}
+
+
 
 const addTaskButton = document.querySelectorAll('.add-task-button')
 addTaskButton.forEach(button => {
