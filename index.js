@@ -160,11 +160,10 @@ function handleEnterTaskName(event) {
     const previewTask = taskList.lastElementChild
     taskList.removeChild(previewTask)
 
-    if (taskName) {
+    if (!taskName) return
         createTask(taskName, sectionId)
 
         updateTaskList()
-    }
 }
 
  
@@ -208,28 +207,36 @@ function handleRenameTask(event) {
     const previewTask = taskList.lastElementChild
     taskList.removeChild(previewTask)
 
-    if (taskName) {
+    if (!taskName) return
         renameTask(taskName, taskId)
 
         updateTaskList()
-    }
 }
 
 // outros
-
-// event liteners: 
 
 function removeEventListeners(input) {
     input.removeEventListener('blur', handleEnterTaskName)
     input.removeEventListener('blur', handleRenameTask)
 }
 
-const taskTitles = document.querySelectorAll('.task-title')
-taskTitles.forEach(taskTitle => taskTitle.addEventListener('dblclick', showRenameInput))
+//inputs
 
+const projectBoard = document.querySelector('.project-board')
+projectBoard.addEventListener('dblclick', (event) => {
+    const target = event.target
 
+    if (target.classList.contains('task-title')) {
+        showRenameInput(event)
+    }
+})
 
-const addTaskButtons = document.querySelectorAll('.add-task-button')
-addTaskButtons.forEach(button => button.addEventListener('click', addPreviewTask))
+projectBoard.addEventListener('click', (event) => {
+    const target = event.target
+
+    if (target.classList.contains('add-task-button')) {
+        addPreviewTask(event)
+    }
+})
 
 
