@@ -14,3 +14,8 @@ body {
     margin: 30px 0;
 }
 
+.task-text {
+    user-select: none;
+    pointer-events: none;
+}
+

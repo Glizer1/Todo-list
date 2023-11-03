@@ -50,13 +50,11 @@ function renameTask(newName, taskId) {
     console.log("renameTask => ", tasksDb, tasksDb[findTaskIndex])
 }
 
-function toggleTaskStatus(status, taskId) {
-    if (typeof status !== "boolean") return
-    
+function toggleTaskStatus(taskId) {    
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
-    tasksDb[findTaskIndex].status = status
+    tasksDb[findTaskIndex].status = tasksDb[findTaskIndex].status === true ? false : true
     console.log("toggleTaskStatus => ", tasksDb[findTaskIndex])
 }
 
@@ -119,12 +117,17 @@ function addPreviewTask(event) {
     inputName.focus()
 }
 
-function createTaskItem(taskName, taskStatus, taskId, sectionId) {
+function createTaskItem(taskName, isCheked, taskId, sectionId) {
+        const taskStatus = isCheked === true ? 'checked' : ''
+
         const newTask = `
             <div class="task" data-taskId="${taskId}">
                 <input type="checkbox" class="task-checkbox" ${taskStatus}>
                 <div class="task-title">
                     <span class="task-text">${taskName}</span>
+                </div>
+                <div class="delete-button-content">
+                    <input type="button" class="delete-button" value="del">
                 </div>
             </div>
         `
@@ -133,19 +136,6 @@ function createTaskItem(taskName, taskStatus, taskId, sectionId) {
         const taskList = section.querySelector('.task-list')
     
         taskList.insertAdjacentHTML('beforeend', newTask);
-}
- 
-function clearTaskList() {
-    const taskList = document.querySelectorAll('.task')
-    taskList.forEach(task => {
-        task.remove()
-    })
-}
-
-function updateTaskList() {
-    clearTaskList()
-
-    tasksDb.forEach(taskList => createTaskItem(taskList.name, taskList.status, taskList.id, taskList.sectionId))
 }
 
 function handleEnterTaskName(event) {
@@ -166,7 +156,7 @@ function handleEnterTaskName(event) {
         updateTaskList()
 }
 
- 
+ //-- update task --
 // renameTask system
 function showRenameInput(event) {
     const target = event.target
@@ -213,12 +203,49 @@ function handleRenameTask(event) {
         updateTaskList()
 }
 
+// toggle task status
+function toggleTaskItemStatus(event) {
+    const target = event.target
+    const taskId = target.closest('.task').dataset.taskid
+
+    toggleTaskStatus(taskId)
+
+    updateTaskList()
+}
+
+
+// deleteTask systemw
+function deleteTaskItem(event) {
+    const target = event.target
+    const taskId = target.closest('.task').dataset.taskid
+
+    if (!taskId) return
+
+    deleteTask(taskId)
+    updateTaskList()
+}
+
 // outros
 
 function removeEventListeners(input) {
     input.removeEventListener('blur', handleEnterTaskName)
     input.removeEventListener('blur', handleRenameTask)
 }
+
+function clearTaskList() {
+    const taskList = document.querySelectorAll('.task')
+    taskList.forEach(task => {
+        task.remove()
+    })
+}
+
+function updateTaskList() {
+    clearTaskList()
+
+    tasksDb.forEach(taskList => createTaskItem(taskList.name, taskList.status, taskList.id, taskList.sectionId))
+}
+
+updateTaskList()
 
 //inputs
 
@@ -236,6 +263,14 @@ projectBoard.addEventListener('click', (event) => {
 
     if (target.classList.contains('add-task-button')) {
         addPreviewTask(event)
+    }
+
+    if (target.classList.contains('delete-button')) {
+        deleteTaskItem(event)
+    }
+
+    if (target.classList.contains('task-checkbox')) {
+        toggleTaskItemStatus(event)
     }
 })
 
