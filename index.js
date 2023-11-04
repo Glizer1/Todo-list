@@ -6,21 +6,22 @@ let tasksDb = [
 ]
 
 let sectionsDb = [
-    { id: '0', sectionName: "Section 1" },
-    { id: '1', sectionName: "Section 2" }
+    { id: '0', name: "Section 1" },
+    { id: '1', name: "Section 2" }
 ]
 
 // -- backEnd --
-/**
- - createTask
- - renameTask
- - toggleChekedState
- - deleteTask
- - generateId
- */
-
  
 // CRUD:
+function createSection(name) {
+    if (typeof name !== 'string') return
+
+    const createId = generateId()
+    sectionsDb.push({ id: createId, name: name })
+
+    console.log('createSection => ', sectionsDb)
+}
+
 function createTask(name, sectionId) {
     if (typeof name !== "string") return
 
@@ -69,7 +70,6 @@ function changeTaskSection(taskId, sectionId) {
     console.log("changeTaskSection => ", tasksDb[findTaskIndex])
 }
 
-
 function deleteTask(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
@@ -88,7 +88,71 @@ function generateId() {
 
 // -- frontEnd -- 
 
- // createTask system:
+// createSection system
+function addPreviewSection(event) {
+    // mudar: outro template
+    const sectionPreviewTemplate = `
+        <div class="project-section" data-sectionId="1">
+            <div class="section-header">
+                <div class="section-title">
+                    <input type="text" class="section-name-input" placeholder="Section name">
+                </div>
+            </div>
+            <div class="task-list"></div>
+        </div>
+    `
+
+    const sectionList = document.querySelector('.project-board')
+    sectionList.insertAdjacentHTML('beforeend', sectionPreviewTemplate)
+
+    const inputName = sectionList.lastElementChild.querySelector('.section-name-input')
+
+    inputName.addEventListener('blur', handleEnterSectionName)
+    
+
+    inputName.addEventListener('keydown', (event) => {    
+        if (event.key === 'Enter') {
+            handleEnterSectionName(event)
+        }
+    })
+
+    inputName.focus()
+}
+
+function createSectionItem(sectionName, sectionId) {
+    const newSection = `
+        <div class="project-section" data-sectionId="${sectionId}">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="title-text">${sectionName}</span>
+                </div>
+            </div>
+            <div class="task-list"></div>
+            <div class="task-adder">
+                <input type="button" class="add-task-button" value="Add task">
+            </div>
+        </div>
+    `
+    const sectionList = document.querySelector('.project-board')
+    sectionList.insertAdjacentHTML('beforeend', newSection)
+}
+
+function handleEnterSectionName(event) {
+    const input = event.target
+    removeEventListeners(input)
+
+    const sectionList = input.closest('.project-board')
+    const previewSection = sectionList.lastElementChild
+    sectionList.removeChild(previewSection)
+
+    const sectionName = input.value.trim()
+    if (!sectionName) return
+    createSection(sectionName)
+    updateProjectBoard() 
+}
+
+
+// createTask system:
 function addPreviewTask(event) {
     console.log(event)
 
@@ -142,21 +206,20 @@ function handleEnterTaskName(event) {
     const input = event.target
     removeEventListeners(input)
 
-    const taskName = input.value.trim()
-
-    const sectionId = input.closest('.project-section').dataset.sectionid
-
     const taskList = input.closest('.task-list')
     const previewTask = taskList.lastElementChild
     taskList.removeChild(previewTask)
 
-    if (!taskName) return
-        createTask(taskName, sectionId)
+    const taskName = input.value.trim()
+    const sectionId = input.closest('.project-section').dataset.sectionid
 
-        updateTaskList()
+    if (!taskName) return
+    createTask(taskName, sectionId)
+    updateTaskList()
 }
 
  //-- update task --
+
 // renameTask system
 function showRenameInput(event) {
     const target = event.target
@@ -230,25 +293,25 @@ function deleteTaskItem(event) {
 function removeEventListeners(input) {
     input.removeEventListener('blur', handleEnterTaskName)
     input.removeEventListener('blur', handleRenameTask)
+    input.removeEventListener('blur', handleEnterSectionName)
 }
 
-function clearTaskList() {
-    const taskList = document.querySelectorAll('.task')
-    taskList.forEach(task => {
-        task.remove()
+function clearProjectBoard() {
+    const sectionList = document.querySelectorAll('.project-section')
+    sectionList.forEach(section => {
+        section.remove()
     })
 }
 
-function updateTaskList() {
-    clearTaskList()
-
-    tasksDb.forEach(taskList => createTaskItem(taskList.name, taskList.status, taskList.id, taskList.sectionId))
+function updateProjectBoard() {
+    clearProjectBoard()
+    sectionsDb.forEach(section => createSectionItem(section.name, section.id))
+    tasksDb.forEach(task => createTaskItem(task.name, task.status, task.id, task.sectionId))
 }
 
-updateTaskList()
+updateProjectBoard()
 
 //inputs
-
 const projectBoard = document.querySelector('.project-board')
 projectBoard.addEventListener('dblclick', (event) => {
     const target = event.target
@@ -273,5 +336,8 @@ projectBoard.addEventListener('click', (event) => {
         toggleTaskItemStatus(event)
     }
 })
+
+const addSectionButton = document.querySelector('.add-section')
+addSectionButton.addEventListener('click', addPreviewSection)
 
 
