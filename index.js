@@ -89,7 +89,7 @@ function generateId() {
 // -- frontEnd -- 
 
 // createSection system
-function addPreviewSection(event) {
+function addPreviewSection() {
     // mudar: outro template
     const sectionPreviewTemplate = `
         <div class="project-section" data-sectionId="1">
@@ -141,11 +141,12 @@ function handleEnterSectionName(event) {
     const input = event.target
     removeEventListeners(input)
 
+    const sectionName = input.value.trim()
+
     const sectionList = input.closest('.project-board')
     const previewSection = sectionList.lastElementChild
     sectionList.removeChild(previewSection)
 
-    const sectionName = input.value.trim()
     if (!sectionName) return
     createSection(sectionName)
     updateProjectBoard() 
@@ -205,17 +206,17 @@ function createTaskItem(taskName, isCheked, taskId, sectionId) {
 function handleEnterTaskName(event) {
     const input = event.target
     removeEventListeners(input)
+    
+    const taskName = input.value.trim()
+    const sectionId = input.closest('.project-section').dataset.sectionid
 
     const taskList = input.closest('.task-list')
     const previewTask = taskList.lastElementChild
     taskList.removeChild(previewTask)
 
-    const taskName = input.value.trim()
-    const sectionId = input.closest('.project-section').dataset.sectionid
-
     if (!taskName) return
     createTask(taskName, sectionId)
-    updateTaskList()
+    updateProjectBoard()
 }
 
  //-- update task --
@@ -263,7 +264,7 @@ function handleRenameTask(event) {
     if (!taskName) return
         renameTask(taskName, taskId)
 
-        updateTaskList()
+        updateProjectBoard()
 }
 
 // toggle task status
@@ -273,7 +274,7 @@ function toggleTaskItemStatus(event) {
 
     toggleTaskStatus(taskId)
 
-    updateTaskList()
+    updateProjectBoard()
 }
 
 
@@ -285,7 +286,7 @@ function deleteTaskItem(event) {
     if (!taskId) return
 
     deleteTask(taskId)
-    updateTaskList()
+    updateProjectBoard()
 }
 
 // outros
