@@ -10,6 +10,16 @@ let sectionsDb = [
     { id: '1', name: "Section 2" }
 ]
 
+let projectDB = [
+    {  sectionId: '0', sectionName: 'Section 1', taskList: [ 
+        { taskId: '0 ', taskName: 'Task 1', status: false },
+        { taskId: '1 ', taskName: 'Task 2', status: true }
+    ] },
+    {  sectionId: '1', sectionName: 'Section 1', taskList: [ 
+        { taskId: '3 ', taskName: 'Task 1', status: false }
+    ] }
+]
+
 // -- backEnd --
  
 // CRUD:
@@ -34,12 +44,21 @@ function createTask(name, sectionId) {
     console.log("createTask => ", tasksDb)
 }
 
+
 function findTaskIndexById(taskId) {
     const findTaskIndex = tasksDb.findIndex(task => taskId === task.id)
     if (findTaskIndex === -1) return false
 
     return findTaskIndex
 }
+
+function findSectionIndexById(sectionId) {
+    const findSectionIndex = sectionsDb.findIndex(section => sectionId === section.id)
+    if (findSectionIndex === -1) return false
+
+    return findSectionIndex
+}
+
 
 function renameTask(newName, taskId) {
     if (typeof newName !== "string") return
@@ -70,12 +89,23 @@ function changeTaskSection(taskId, sectionId) {
     console.log("changeTaskSection => ", tasksDb[findTaskIndex])
 }
 
+
 function deleteTask(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
     tasksDb.splice(findTaskIndex, 1)
     console.log("deleteTask => ", tasksDb)
+}
+
+function deleteSection(sectionId) {
+    const findSectionIndex = findSectionIndexById(sectionId)
+    if (findSectionIndex === false) return
+
+    sectionsDb.splice(findSectionIndex, 1)
+
+    tasksDb = tasksDb.filter(task => task.sectionId !== sectionId)
+    console.log('deleteSection => ', sectionsDb)
 }
 
 // Others
@@ -130,6 +160,9 @@ function createSectionItem(sectionName, sectionId) {
             <div class="task-list"></div>
             <div class="task-adder">
                 <input type="button" class="add-task-button" value="Add task">
+            </div>
+            <div class="delete-section-content">
+                    <input type="button" class="delete-section-button" value="del">
             </div>
         </div>
     `
@@ -191,8 +224,8 @@ function createTaskItem(taskName, isCheked, taskId, sectionId) {
                 <div class="task-title">
                     <span class="task-text">${taskName}</span>
                 </div>
-                <div class="delete-button-content">
-                    <input type="button" class="delete-button" value="del">
+                <div class="delete-task-content">
+                    <input type="button" class="delete-task-button" value="del">
                 </div>
             </div>
         `
@@ -289,6 +322,16 @@ function deleteTaskItem(event) {
     updateProjectBoard()
 }
 
+// deleteSectiion system
+function deleteSectionItem(event) {
+    const target = event.target
+    const sectionId  = target.closest('.project-section').dataset.sectionid
+
+    if (!sectionId) return
+    deleteSection(sectionId)
+    updateProjectBoard()
+}
+
 // outros
 
 function removeEventListeners(input) {
@@ -329,12 +372,16 @@ projectBoard.addEventListener('click', (event) => {
         addPreviewTask(event)
     }
 
-    if (target.classList.contains('delete-button')) {
+    if (target.classList.contains('delete-task-button')) {
         deleteTaskItem(event)
     }
 
     if (target.classList.contains('task-checkbox')) {
         toggleTaskItemStatus(event)
+    }
+
+    if (target.classList.contains('delete-section-button')) {
+        deleteSectionItem(event)
     }
 })
 
