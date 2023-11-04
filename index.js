@@ -10,16 +10,6 @@ let sectionsDb = [
     { id: '1', name: "Section 2" }
 ]
 
-let projectDB = [
-    {  sectionId: '0', sectionName: 'Section 1', taskList: [ 
-        { taskId: '0 ', taskName: 'Task 1', status: false },
-        { taskId: '1 ', taskName: 'Task 2', status: true }
-    ] },
-    {  sectionId: '1', sectionName: 'Section 1', taskList: [ 
-        { taskId: '3 ', taskName: 'Task 1', status: false }
-    ] }
-]
-
 // -- backEnd --
  
 // CRUD:
@@ -59,6 +49,16 @@ function findSectionIndexById(sectionId) {
     return findSectionIndex
 }
 
+
+function renameSection(newName, sectionId) {
+    if (typeof newName !== "string") return
+
+    const findSectionIndex = findSectionIndexById(sectionId)
+    if (findSectionIndex === false) return
+
+    sectionsDb[findSectionIndex].name = newName
+    console.log('renameTask => ', sectionsDb, sectionsDb[findSectionIndex])
+}
 
 function renameTask(newName, taskId) {
     if (typeof newName !== "string") return
@@ -154,7 +154,7 @@ function createSectionItem(sectionName, sectionId) {
         <div class="project-section" data-sectionId="${sectionId}">
             <div class="section-header">
                 <div class="section-title">
-                    <span class="title-text">${sectionName}</span>
+                    <span class="section-text">${sectionName}</span>
                 </div>
             </div>
             <div class="task-list"></div>
@@ -254,19 +254,63 @@ function handleEnterTaskName(event) {
 
  //-- update task --
 
+// renameSection sustem
+function showSectionRenameInput(event) {
+    const target = event.target
+
+    const renameInput = `
+    <input type="text" class="task-name-input" placeholder="Task name">
+    ` 
+
+    target.insertAdjacentHTML('beforeend', renameInput)
+
+    const sectionText = target.querySelector('.section-text')
+    sectionText.style.display = 'none' // Mudar: Css
+
+    const inputName = sectionText.nextElementSibling
+
+    inputName.addEventListener('blur', handleRenameSection)
+    inputName.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            handleRenameSection(event)
+        }
+    })
+
+    inputName.focus()
+}
+
+function handleRenameSection(event) {
+    const inputButton = event.target
+    removeEventListeners(inputButton)
+
+    const sectionName = inputButton.value.trim()
+    const sectionId = inputButton.closest('.project-section').dataset.sectionid
+    console.log(sectionId)
+
+    const sectionList = inputButton.closest('.project-board')
+    const renameInput = sectionList.lastElementChild
+    sectionList.removeChild(renameInput)
+
+    console.log('sectionName: ', sectionName)
+
+    if (!sectionName) return
+    renameSection(sectionName, sectionId)
+    updateProjectBoard()
+}
+
 // renameTask system
-function showRenameInput(event) {
+function showTaskRenameInput(event) {
     const target = event.target
     console.log(target)
     
     const renameInput = `
     <input type="text" class="task-name-input" placeholder="Task name">
     `
-    const taskTitle = target.querySelector('.task-text')
-    console.log(taskTitle)
+
+    target.insertAdjacentHTML('beforeend', renameInput);
     
+    const taskTitle = target.querySelector('.task-text')
     taskTitle.style.display = 'none' // Mudar: add em css
-    taskTitle.insertAdjacentHTML('afterend', renameInput);
 
     const inputName = taskTitle.nextElementSibling
 
@@ -283,21 +327,21 @@ function showRenameInput(event) {
 }
 
 function handleRenameTask(event) {
-    const input = event.target
-    removeEventListeners(input)
+    const inputButton = event.target
+    removeEventListeners(inputButton)
 
-    const taskName = input.value.trim()
-    const taskId = input.closest('.task').dataset.taskid
+    const taskName = inputButton.value.trim()
+    const taskId = inputButton.closest('.task').dataset.taskid
     console.log(taskId)
 
-    const taskList = input.closest('.task-list')
-    const previewTask = taskList.lastElementChild
-    taskList.removeChild(previewTask)
+    const taskList = inputButton.closest('.task-list')
+    const renameInput = taskList.lastElementChild
+    console.log(renameInput)
+    taskList.removeChild(renameInput)
 
     if (!taskName) return
-        renameTask(taskName, taskId)
-
-        updateProjectBoard()
+    renameTask(taskName, taskId)
+    updateProjectBoard()
 }
 
 // toggle task status
@@ -338,6 +382,7 @@ function removeEventListeners(input) {
     input.removeEventListener('blur', handleEnterTaskName)
     input.removeEventListener('blur', handleRenameTask)
     input.removeEventListener('blur', handleEnterSectionName)
+    input.removeEventListener('blur', handleRenameSection)
 }
 
 function clearProjectBoard() {
@@ -361,7 +406,11 @@ projectBoard.addEventListener('dblclick', (event) => {
     const target = event.target
 
     if (target.classList.contains('task-title')) {
-        showRenameInput(event)
+        showTaskRenameInput(event)
+    }
+
+    if (target.classList.contains('section-title')) {
+        showSectionRenameInput(event)
     }
 })
 

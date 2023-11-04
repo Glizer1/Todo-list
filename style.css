@@ -19,3 +19,8 @@ body {
     pointer-events: none;
 }
 
+.section-text {
+    user-select: none;
+    pointer-events: none;
+}
+
