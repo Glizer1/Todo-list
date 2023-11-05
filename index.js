@@ -121,21 +121,22 @@ function generateId() {
 // createSection system
 function addPreviewSection() {
     // mudar: outro template
-    const sectionPreviewTemplate = `
-        <div class="project-section" data-sectionId="1">
-            <div class="section-header">
-                <div class="section-title">
-                    <input type="text" class="section-name-input" placeholder="Section name">
-                </div>
+    const sectionItemEditor = `
+        <div class="section-editor">
+            <div class="section-editor-input">
+                <input type="text" class="input-field">
             </div>
-            <div class="task-list"></div>
+            <div class="section-editor-footer">
+                <input type="button" class="cancel-button default-button" value="cancel">
+                <input type="button" class="add-button default-button" value="create">
+            </div>
         </div>
     `
 
     const sectionList = document.querySelector('.project-board')
-    sectionList.insertAdjacentHTML('beforeend', sectionPreviewTemplate)
+    sectionList.insertAdjacentHTML('beforeend', sectionItemEditor)
 
-    const inputName = sectionList.lastElementChild.querySelector('.section-name-input')
+    const inputName = sectionList.querySelector('.input-field')
 
     inputName.addEventListener('blur', handleEnterSectionName)
     
@@ -188,24 +189,34 @@ function handleEnterSectionName(event) {
 
 // createTask system:
 function addPreviewTask(event) {
-    console.log(event)
-
     const target = event.target
     const section = target.closest('.project-section')
 
-    const taskPreviewTemplate = `
-        <input type="text" class="task-name-input" placeholder="Task name">
+    const taskItemEditor = `
+        <div class="task-editor">
+            <div class="task-editor-area">
+                <div class="task-editor-input">
+                    <input type="text" class="input-field" placeholder="Task name">
+                </div>
+                <div class="task-editor-buttons">
+                    <input type="button" class="date-input" value="set date">
+                    <input type="button" class="status-input" value="add status">
+                </div>
+            </div>
+            <div class="task-editor-footer">
+                <input type="button" class="cancel-button default-button" value="cancel">
+                <input type="button" class="add-button default-button" value="create">
+            </div>
+        </div>
     `
 
     const taskList = section.querySelector('.task-list')
-    
-    taskList.insertAdjacentHTML('beforeend', taskPreviewTemplate);
+    taskList.insertAdjacentHTML('beforeend', taskItemEditor);
 
-    const inputName = taskList.lastElementChild
+    const inputName = taskList.querySelector('.input-field')
 
     inputName.addEventListener('blur', handleEnterTaskName)
     
-
     inputName.addEventListener('keydown', (event) => {    
         if (event.key === 'Enter') {
             handleEnterTaskName(event)
@@ -259,7 +270,7 @@ function showSectionRenameInput(event) {
     const target = event.target
 
     const renameInput = `
-    <input type="text" class="task-name-input" placeholder="Task name">
+    <input type="text" class="input-field" placeholder="Task name">
     ` 
 
     target.insertAdjacentHTML('beforeend', renameInput)
@@ -304,7 +315,7 @@ function showTaskRenameInput(event) {
     console.log(target)
     
     const renameInput = `
-    <input type="text" class="task-name-input" placeholder="Task name">
+        <input type="text" class="input-field" placeholder="Task name">
     `
 
     target.insertAdjacentHTML('beforeend', renameInput);
