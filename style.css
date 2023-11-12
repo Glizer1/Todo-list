@@ -1,6 +1,8 @@
 :root {
     --background: #222222;
     --main-font-color: #fefefe;
+    --division: #525252;
+    --color-text-button: #2d9fdd;
 }
 
 body {
@@ -8,10 +10,129 @@ body {
     color: var(--main-font-color);
     margin: 0;
     font-size: 15px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.project-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* buttons */
+.default-button {
+    padding: 0 20px;
+    max-height: 25px;
+    height: 25px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.default-button:hover {
+    color: var(--color-text-button);
+}
+
+.text-button {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* --Project Header-- */
+.project-header {
+    position: sticky;
+    top: 0;
+    background-color: var(--background);
+    margin: 5px 0 10px;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+.project-title {
+    display: inline-block;
+    padding: 10px 5px;
+}
+
+.project-title h1 {
+    margin: 0;
+}
+
+.section-adder {
+    display: inline-block;
+}
+
+.add-section {
+
+}
+
+
+/* --Project board-- */
+.project-board {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 5px;
 }
 
 .project-section {
-    margin: 30px 0;
+    width: 100%;
+    margin: 0 0 30px;
+}
+
+
+.section-header {
+    width: 100%;
+    height: 100%;
+    max-height: 25px;
+    padding: 5px 0;
+    border-bottom: var(--division) solid 1px;
+}
+
+.section-title {
+    display: inline-block;
+    padding: 0 3px;
+}
+
+.section-text {
+    font-size: 1.2em;
+    font-weight: 600;
+    user-select: none;
+    pointer-events: none;
+}
+
+.delete-section-content {
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+
+.section-inner-content {
+    padding: 5px 0 0 20px;
+}
+
+.task-list {
+    box-sizing: border-box
+}
+
+.task {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 3px;
+    border-bottom: 1px solid var(--division);
+    box-sizing: border-box;
+}
+
+.task-checkbox {
+    
+}
+
+.task-title {
+    width: 100%;
+    margin: 0 4px;
+    padding: 1px 2px;
 }
 
 .task-text {
@@ -19,8 +140,27 @@ body {
     pointer-events: none;
 }
 
-.section-text {
-    user-select: none;
-    pointer-events: none;
+.delete-task-content {
+
 }
 
+.delete-task-button {
+
+}
+
+
+.task-adder {
+    padding: 0 2px;
+    box-sizing: border-box;
+}
+
+.add-task-button {
+    background: none;
+    color: var(--main-font-color);
+    border: none;
+    width: 100%;
+    padding: 3px;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}

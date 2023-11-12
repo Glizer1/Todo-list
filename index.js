@@ -150,13 +150,19 @@ function createSectionItem(sectionName, sectionId) {
                 <div class="section-title">
                     <span class="section-text">${sectionName}</span>
                 </div>
+                <div class="delete-section-content">
+                    <button type="button" class="delete-section-button default-button">
+                        <span class="text-button">Delete</span>
+                    </button>
+                </div>
             </div>
-            <div class="task-list"></div>
-            <div class="task-adder">
-                <input type="button" class="add-task-button" value="Add task">
-            </div>
-            <div class="delete-section-content">
-                    <input type="button" class="delete-section-button" value="del">
+            <div class="section-inner-content">
+                <div class="task-list"></div>
+                <div class="task-adder">
+                    <button type="button" class="add-task-button default-button">
+                        <span class="text-button">Add task</span>
+                    </button>
+                </div>
             </div>
         </div>
     `
@@ -211,8 +217,12 @@ function addPreviewTask(event) {
                 </div>
             </div>
             <div class="task-editor-footer">
-                <input type="button" class="cancel-button default-button" value="cancel">
-                <input type="button" class="add-button default-button" value="create">
+                <button type="button" class="cancel-button default-button">
+                    <span class="text-button">Cancel</span>
+                </button>
+                <button type="button" class="add-button default-button">
+                    <span class="text-button">Add task</span>
+                </button>
             </div>
         </div>
     `
@@ -235,7 +245,9 @@ function createTaskItem(taskName, taskState, taskId, sectionId) {
                     <span class="task-text">${taskName}</span>
                 </div>
                 <div class="delete-task-content">
-                    <input type="button" class="delete-task-button" value="del">
+                    <button type="button" class="delete-task-button default-button">
+                        <span class="text-button">Delete</span>
+                    </button>
                 </div>
             </div>
         `
