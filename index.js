@@ -137,17 +137,10 @@ function addPreviewSection() {
     sectionList.insertAdjacentHTML('beforeend', sectionItemEditor)
 
     const inputName = sectionList.querySelector('.input-field')
-
-    inputName.addEventListener('blur', handleEnterSectionName)
-    
-
-    inputName.addEventListener('keydown', (event) => {    
-        if (event.key === 'Enter') {
-            handleEnterSectionName(event)
-        }
-    })
-
     inputName.focus()
+
+    const sectionEditor = document.querySelector('.section-editor')
+    setSectionEditorEventListeners(sectionEditor)
 }
 
 function createSectionItem(sectionName, sectionId) {
@@ -171,19 +164,37 @@ function createSectionItem(sectionName, sectionId) {
     sectionList.insertAdjacentHTML('beforeend', newSection)
 }
 
-function handleEnterSectionName(event) {
-    const input = event.target
-    removeEventListeners(input)
+function setSectionEditorEventListeners(sectionEditor) {
+    sectionEditor.querySelector('.cancel-button').addEventListener('click', (event) => {
+        removeSectionEditor(sectionEditor)
+    })
 
-    const sectionName = input.value.trim()
+    sectionEditor.querySelector('.add-button').addEventListener('click', (event) => {
+        handleEnterSectionName(sectionEditor)
+    })
 
-    const sectionList = input.closest('.project-board')
-    const previewSection = sectionList.lastElementChild
-    sectionList.removeChild(previewSection)
+    sectionEditor.querySelector('.input-field').addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return
+        handleEnterSectionName(sectionEditor)
+    })
+}
+
+function handleEnterSectionName(sectionEditor) {
+    const inputField = sectionEditor.querySelector('.input-field')
+
+    const sectionName = inputField.value.trim()
+
+    removeSectionEditor(sectionEditor)
 
     if (!sectionName) return
     createSection(sectionName)
     updateProjectBoard() 
+}
+
+function removeSectionEditor(sectionEditor) {
+    const sectionList = sectionEditor.closest('.project-board')
+    const previewSection = sectionList.querySelector('.section-editor')
+    sectionList.removeChild(previewSection)
 }
 
 
@@ -214,16 +225,10 @@ function addPreviewTask(event) {
     taskList.insertAdjacentHTML('beforeend', taskItemEditor);
 
     const inputName = taskList.querySelector('.input-field')
-
-    inputName.addEventListener('blur', handleEnterTaskName)
-    
-    inputName.addEventListener('keydown', (event) => {    
-        if (event.key === 'Enter') {
-            handleEnterTaskName(event)
-        }
-    })
-
     inputName.focus()
+    
+    const taskEditor = document.querySelector('.task-editor')
+    setTaskEditorEventListeners(taskEditor)
 }
 
 function createTaskItem(taskName, isCheked, taskId, sectionId) {
@@ -247,20 +252,46 @@ function createTaskItem(taskName, isCheked, taskId, sectionId) {
         taskList.insertAdjacentHTML('beforeend', newTask);
 }
 
-function handleEnterTaskName(event) {
-    const input = event.target
-    removeEventListeners(input)
-    
-    const taskName = input.value.trim()
-    const sectionId = input.closest('.project-section').dataset.sectionid
+function setTaskEditorEventListeners(taskEditor) {
+    taskEditor.querySelector('.date-input').addEventListener('click', (event) => {
+         
+    })
 
-    const taskList = input.closest('.task-list')
-    const previewTask = taskList.lastElementChild
-    taskList.removeChild(previewTask)
+    taskEditor.querySelector('.status-input').addEventListener('click', (event) => {
+         
+    })
+
+    taskEditor.querySelector('.cancel-button').addEventListener('click', (event) => {
+        removeTaskEditor(taskEditor)
+    })
+
+    taskEditor.querySelector('.add-button').addEventListener('click', (event) => {
+        handleEnterTaskName(taskEditor) 
+    })
+
+    taskEditor.querySelector('.input-field').addEventListener('keydown', (event) => {    
+        if (event.key !== 'Enter') return
+        handleEnterTaskName(taskEditor)
+    })
+}
+
+function handleEnterTaskName(taskEditor) {
+    const inputField = taskEditor.querySelector('.input-field')
+    
+    const taskName = inputField.value.trim()
+    const sectionId = inputField.closest('.project-section').dataset.sectionid
+
+    removeTaskEditor(taskEditor)
 
     if (!taskName) return
     createTask(taskName, sectionId)
     updateProjectBoard()
+}
+
+function removeTaskEditor(taskEditor) {
+    const taskList = taskEditor.closest('.task-list')
+    const previewTask = taskList.querySelector('.task-editor')
+    taskList.removeChild(previewTask)
 }
 
  //-- update task --
@@ -390,9 +421,7 @@ function deleteSectionItem(event) {
 // outros
 
 function removeEventListeners(input) {
-    input.removeEventListener('blur', handleEnterTaskName)
     input.removeEventListener('blur', handleRenameTask)
-    input.removeEventListener('blur', handleEnterSectionName)
     input.removeEventListener('blur', handleRenameSection)
 }
 
