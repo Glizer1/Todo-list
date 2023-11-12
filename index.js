@@ -1,8 +1,8 @@
 
 let tasksDb = [
-    { id: '0', name: "Task 1", status: false, sectionId: '0' },
-    { id: '1', name: "Task 2", status: true, sectionId: '0' },
-    { id: '2', name: "Task 1", status: false, sectionId: '1' }
+    { id: '0', name: "Task 1", state: '', sectionId: '0' },
+    { id: '1', name: "Task 2", state: 'checked', sectionId: '0' },
+    { id: '2', name: "Task 1", state: '', sectionId: '1' }
 ]
 
 let sectionsDb = [
@@ -29,7 +29,7 @@ function createTask(name, sectionId) {
     if (!findSection) return
 
     const createId = generateId()
-    tasksDb.push({ id: createId, name, status: false, sectionId })
+    tasksDb.push({ id: createId, name, state: '', sectionId })
 
     console.log("createTask => ", tasksDb)
 }
@@ -70,12 +70,12 @@ function renameTask(newName, taskId) {
     console.log("renameTask => ", tasksDb, tasksDb[findTaskIndex])
 }
 
-function toggleTaskStatus(taskId) {    
+function toggleTaskState(taskId) {    
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
-    tasksDb[findTaskIndex].status = tasksDb[findTaskIndex].status === true ? false : true
-    console.log("toggleTaskStatus => ", tasksDb[findTaskIndex])
+    tasksDb[findTaskIndex].state = tasksDb[findTaskIndex].state === '' ? 'checked' : ''
+    console.log("toggleTaskState => ", tasksDb[findTaskIndex])
 }
 
 function changeTaskSection(taskId, sectionId) {
@@ -209,10 +209,6 @@ function addPreviewTask(event) {
                 <div class="task-editor-input">
                     <input type="text" class="input-field" placeholder="Task name">
                 </div>
-                <div class="task-editor-buttons">
-                    <input type="button" class="date-input" value="set date">
-                    <input type="button" class="status-input" value="add status">
-                </div>
             </div>
             <div class="task-editor-footer">
                 <input type="button" class="cancel-button default-button" value="cancel">
@@ -231,12 +227,10 @@ function addPreviewTask(event) {
     setTaskEditorEventListeners(taskEditor)
 }
 
-function createTaskItem(taskName, isCheked, taskId, sectionId) {
-        const taskStatus = isCheked === true ? 'checked' : ''
-
+function createTaskItem(taskName, taskState, taskId, sectionId) {
         const newTask = `
             <div class="task" data-taskId="${taskId}">
-                <input type="checkbox" class="task-checkbox" ${taskStatus}>
+                <input type="checkbox" class="task-checkbox" ${taskState}>
                 <div class="task-title">
                     <span class="task-text">${taskName}</span>
                 </div>
@@ -253,14 +247,6 @@ function createTaskItem(taskName, isCheked, taskId, sectionId) {
 }
 
 function setTaskEditorEventListeners(taskEditor) {
-    taskEditor.querySelector('.date-input').addEventListener('click', (event) => {
-         
-    })
-
-    taskEditor.querySelector('.status-input').addEventListener('click', (event) => {
-         
-    })
-
     taskEditor.querySelector('.cancel-button').addEventListener('click', (event) => {
         removeTaskEditor(taskEditor)
     })
@@ -293,6 +279,7 @@ function removeTaskEditor(taskEditor) {
     const previewTask = taskList.querySelector('.task-editor')
     taskList.removeChild(previewTask)
 }
+
 
  //-- update task --
 
@@ -386,12 +373,12 @@ function handleRenameTask(event) {
     updateProjectBoard()
 }
 
-// toggle task status
-function toggleTaskItemStatus(event) {
+// toggle task state
+function toggleTaskItemState(event) {
     const target = event.target
     const taskId = target.closest('.task').dataset.taskid
 
-    toggleTaskStatus(taskId)
+    toggleTaskState(taskId)
 
     updateProjectBoard()
 }
@@ -435,7 +422,7 @@ function clearProjectBoard() {
 function updateProjectBoard() {
     clearProjectBoard()
     sectionsDb.forEach(section => createSectionItem(section.name, section.id))
-    tasksDb.forEach(task => createTaskItem(task.name, task.status, task.id, task.sectionId))
+    tasksDb.forEach(task => createTaskItem(task.name, task.state, task.id, task.sectionId))
 }
 
 updateProjectBoard()
@@ -466,7 +453,7 @@ projectBoard.addEventListener('click', (event) => {
     }
 
     if (target.classList.contains('task-checkbox')) {
-        toggleTaskItemStatus(event)
+        toggleTaskItemState(event)
     }
 
     if (target.classList.contains('delete-section-button')) {
