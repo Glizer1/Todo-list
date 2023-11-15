@@ -3,6 +3,10 @@
     --main-font-color: #fefefe;
     --division: #525252;
     --color-text-button: #2d9fdd;
+    --main-button-color: #3d3d3d;
+    --main-button-color-hover: #484848;
+    --secondary-button-color: #2d9fdd;
+    --secondary-button-color-hover: #2888bb;
 }
 
 body {
@@ -13,6 +17,22 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+
+.parent {
+    display: inline-block;
+    background-color: red;
+    height: 150px;
+    width: 150px;
+}
+
+.child-class {
+    background: blue;
+    width: 50px;
+    height: 50px;
+    margin: auto;
+}
+
+
 .project-content {
     position: relative;
     width: 100%;
@@ -22,16 +42,20 @@ body {
 
 /* buttons */
 .default-button {
+    background-color: var(--main-button-color);
+    color: var(--main-font-color);
     padding: 0 20px;
     max-height: 25px;
     height: 25px;
     border: 1px solid transparent;
     border-radius: 7px;
     cursor: pointer;
+    transition: background-color .2s, color .2s;
 }
 
 .default-button:hover {
-    color: var(--color-text-button);
+    background-color: var(--main-button-color-hover);
+    /* color: var(--color-text-button); */
 }
 
 .text-button {
@@ -113,16 +137,27 @@ body {
 }
 
 .task-list {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box
 }
 
 .task {
     display: flex;
     justify-content: flex-start;
+    align-items: center;
     width: 100%;
+    height: 100%;
+    min-height: 35px;
+    max-height: 50px;
     padding: 3px;
     border-bottom: 1px solid var(--division);
+    cursor: pointer;
     box-sizing: border-box;
+}
+
+.task:hover {
+    
 }
 
 .task-checkbox {
@@ -140,11 +175,63 @@ body {
     pointer-events: none;
 }
 
+.task:has(.task-checkbox:checked) .task-text {
+    text-decoration: line-through;
+}
+
+.task-tools {
+    display: none;
+}
+
+.task:hover  .task-tools {
+    display: block;
+}
+
 .delete-task-content {
 
 }
 
 .delete-task-button {
+
+}
+
+
+.task-editor {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.task-editor-area {
+
+}
+
+.task-editor-input {
+
+}
+
+.input-field {
+    background: none;
+    border: none;
+    color: var(--main-font-color);
+    width: 100%;
+    height: 100%;
+    outline: none;
+    cursor: text;
+}
+
+.input-field span:has(br)::before {
+    /* Mudar: root  */
+    color: #808080; 
+    content: attr(placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+
+.task-editor-footer {
 
 }
 
@@ -163,4 +250,17 @@ body {
     text-align: left;
     cursor: pointer;
     box-sizing: border-box;
+}
+
+.add-task-button:hover {
+    color: var(--color-text-button);
+    background-color: transparent;
+}
+
+.add-button {
+    background-color: var(--secondary-button-color);
+}
+
+.add-button:hover {
+    background-color: var(--secondary-button-color-hover);
 }

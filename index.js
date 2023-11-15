@@ -1,4 +1,3 @@
-
 let tasksDb = [
     { id: '0', name: "Task 1", state: '', sectionId: '0' },
     { id: '1', name: "Task 2", state: 'checked', sectionId: '0' },
@@ -120,11 +119,14 @@ function generateId() {
 
 // createSection system
 function addPreviewSection() {
-    // mudar: outro template
+    const isPreviewActive = document.querySelector('.section-editor')
+    if (isPreviewActive) return
+
     const sectionItemEditor = `
         <div class="section-editor">
             <div class="section-editor-input">
-                <input type="text" class="input-field">
+                <!-- <input type="text" class="input-field" placeholder="Section name"> -->
+                <div contenteditable="true" class="input-field" placeholder="Section Name"></div>
             </div>
             <div class="section-editor-footer">
                 <input type="button" class="cancel-button default-button" value="cancel">
@@ -157,7 +159,7 @@ function createSectionItem(sectionName, sectionId) {
                 </div>
             </div>
             <div class="section-inner-content">
-                <div class="task-list"></div>
+                <ul class="task-list"></ul>
                 <div class="task-adder">
                     <button type="button" class="add-task-button default-button">
                         <span class="text-button">Add task</span>
@@ -206,14 +208,26 @@ function removeSectionEditor(sectionEditor) {
 
 // createTask system:
 function addPreviewTask(event) {
+    const oldTaskEditor = document.querySelector('.task-editor')
+    if (oldTaskEditor) return
+
     const target = event.target
     const section = target.closest('.project-section')
+
+    // remove all taskAdders
+    const allTaskAdders = document.querySelectorAll('.task-adder')
+    allTaskAdders.forEach(element => element.remove())
 
     const taskItemEditor = `
         <div class="task-editor">
             <div class="task-editor-area">
                 <div class="task-editor-input">
-                    <input type="text" class="input-field" placeholder="Task name">
+                    <!-- <input type="text" class="input-field" placeholder="Task name"> -->
+                    <div class="input-field" contenteditable="true" role="textbox" aria-readonly="false" aria-multiline="true" aria-label="Task name" translate="no" tabindex="0">
+                        <span placeholder="Task name" class="input-text">
+                             <br class="line-break">
+                        </span>
+                    </div>
                 </div>
             </div>
             <div class="task-editor-footer">
@@ -226,30 +240,88 @@ function addPreviewTask(event) {
             </div>
         </div>
     `
+    const sectionInnerContent = section.querySelector('.section-inner-content')
+    sectionInnerContent.insertAdjacentHTML('beforeend', taskItemEditor);
 
-    const taskList = section.querySelector('.task-list')
-    taskList.insertAdjacentHTML('beforeend', taskItemEditor);
-
-    const inputName = taskList.querySelector('.input-field')
-    inputName.focus()
+    const inputField = sectionInnerContent.querySelector('.input-field')
+    inputField.focus()
     
     const taskEditor = document.querySelector('.task-editor')
     setTaskEditorEventListeners(taskEditor)
+
+    startObserving(inputField)
 }
+
+
+
+const startObserving = (domNode) => {
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(function (mutation) {
+            console.log('----------------------')
+            console.log('type: ', mutation.type)
+            console.log('removedNodes => ', Array.from(mutation.removedNodes));
+            if (mutation.removedNodes.length !== 0) {
+                console.log('removed: ', mutation.removedNodes[0])
+            }
+            console.log('addedNodes  => ', Array.from(mutation.addedNodes));
+            if (mutation.addedNodes.length !== 0) {
+                console.log('added: ', mutation.addedNodes[0])
+            }
+    
+            const elementRemoved = Array.from(
+                mutation.removedNodes,
+            ).some(element => {
+                if (element.classList) {
+                    return true
+                }
+
+                return false;
+            });
+    
+            if (elementRemoved) {
+                console.log('The element was removed from the DOM');
+                resetInputField(domNode, mutation.removedNodes)
+            }
+        });
+    });
+    
+    observer.observe(domNode, {
+    childList: true,
+    attributes: true,
+    characterData: true,
+    subtree: true,
+    });
+    
+    
+    return observer;
+};
+
+function resetInputField(inputField, removedNodes) {
+    console.log('reset => ', removedNodes, removedNodes[0])
+    // MUdar: talvez melhorar
+    // if (removedNodes[0].classList.contains('input-text')) {
+    //     inputField.appendChild(removedNodes[0])
+    // } else if (removedNodes[0].classList.contains('line-break')) {
+    //     document.querySelector('.input-text').appendChild(removedNodes[0])
+    // }
+}
+
 
 function createTaskItem(taskName, taskState, taskId, sectionId) {
         const newTask = `
-            <div class="task" data-taskId="${taskId}">
+            <li class="task" data-taskId="${taskId}">
                 <input type="checkbox" class="task-checkbox" ${taskState}>
                 <div class="task-title">
                     <span class="task-text">${taskName}</span>
                 </div>
-                <div class="delete-task-content">
-                    <button type="button" class="delete-task-button default-button">
-                        <span class="text-button">Delete</span>
-                    </button>
+                <div class="task-tools">
+                    <div class="delete-task-content">
+                        <button type="button" class="delete-task-button default-button">
+                            <span class="text-button">Delete</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </li>
         `
 
         const section = document.querySelector(`[data-sectionId="${sectionId}"]`)
@@ -259,15 +331,16 @@ function createTaskItem(taskName, taskState, taskId, sectionId) {
 }
 
 function setTaskEditorEventListeners(taskEditor) {
-    taskEditor.querySelector('.cancel-button').addEventListener('click', (event) => {
+    taskEditor.querySelector('.cancel-button').addEventListener('click', () => {
         removeTaskEditor(taskEditor)
     })
 
-    taskEditor.querySelector('.add-button').addEventListener('click', (event) => {
+    taskEditor.querySelector('.add-button').addEventListener('click', () => {
         handleEnterTaskName(taskEditor) 
     })
 
     taskEditor.querySelector('.input-field').addEventListener('keydown', (event) => {    
+        // console.log(taskEditor, event, event.key)
         if (event.key !== 'Enter') return
         handleEnterTaskName(taskEditor)
     })
@@ -276,7 +349,7 @@ function setTaskEditorEventListeners(taskEditor) {
 function handleEnterTaskName(taskEditor) {
     const inputField = taskEditor.querySelector('.input-field')
     
-    const taskName = inputField.value.trim()
+    const taskName = inputField.textContent.trim()
     const sectionId = inputField.closest('.project-section').dataset.sectionid
 
     removeTaskEditor(taskEditor)
@@ -287,9 +360,26 @@ function handleEnterTaskName(taskEditor) {
 }
 
 function removeTaskEditor(taskEditor) {
-    const taskList = taskEditor.closest('.task-list')
-    const previewTask = taskList.querySelector('.task-editor')
-    taskList.removeChild(previewTask)
+    const sectionInnerContent = taskEditor.closest('.section-inner-content')
+    const previewTask = sectionInnerContent.querySelector('.task-editor')
+    sectionInnerContent.removeChild(previewTask)
+
+    showTaskAdders()
+}
+
+function showTaskAdders() {
+    const taskAdderTemplate = `
+        <div class="task-adder">
+            <button type="button" class="add-task-button default-button">
+                <span class="text-button">Add task</span>
+            </button>
+        </div>
+    `
+    const allInnerContentSections = document.querySelectorAll('.section-inner-content')
+    console.log(allInnerContentSections)
+    allInnerContentSections.forEach(element => {
+        element.insertAdjacentHTML('beforeend', taskAdderTemplate)
+    })
 }
 
 
@@ -321,18 +411,14 @@ function showSectionRenameInput(event) {
 }
 
 function handleRenameSection(event) {
-    const inputButton = event.target
-    removeEventListeners(inputButton)
+    const inputField = event.target
+    removeEventListeners(inputField)
 
-    const sectionName = inputButton.value.trim()
-    const sectionId = inputButton.closest('.project-section').dataset.sectionid
-    console.log(sectionId)
+    const sectionName = inputField.value.trim()
+    const sectionId = inputField.closest('.project-section').dataset.sectionid
 
-    const sectionList = inputButton.closest('.project-board')
-    const renameInput = sectionList.lastElementChild
-    sectionList.removeChild(renameInput)
-
-    console.log('sectionName: ', sectionName)
+    inputField.previousElementSibling.style.display = 'block' // Mudar: css
+    inputField.remove()
 
     if (!sectionName) return
     renameSection(sectionName, sectionId)
@@ -368,17 +454,14 @@ function showTaskRenameInput(event) {
 }
 
 function handleRenameTask(event) {
-    const inputButton = event.target
-    removeEventListeners(inputButton)
+    const inputField = event.target
+    removeEventListeners(inputField)
 
-    const taskName = inputButton.value.trim()
-    const taskId = inputButton.closest('.task').dataset.taskid
-    console.log(taskId)
+    const taskName = inputField.value.trim()
+    const taskId = inputField.closest('.task').dataset.taskid
 
-    const taskList = inputButton.closest('.task-list')
-    const renameInput = taskList.lastElementChild
-    console.log(renameInput)
-    taskList.removeChild(renameInput)
+    inputField.previousElementSibling.style.display = 'block' // Mudar: css
+    inputField.remove()
 
     if (!taskName) return
     renameTask(taskName, taskId)
