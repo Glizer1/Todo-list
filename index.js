@@ -118,6 +118,13 @@ function generateId() {
 // -- frontEnd -- 
 
 // createSection system
+function createHTMLelement(htmlString) {
+    const div = document.createElement('div')
+    div.innerHTML = htmlString.trim()
+
+    return div.firstElementChild
+}
+
 function addPreviewSection() {
     const isPreviewActive = document.querySelector('.section-editor')
     if (isPreviewActive) return
@@ -218,16 +225,11 @@ function addPreviewTask(event) {
     const allTaskAdders = document.querySelectorAll('.task-adder')
     allTaskAdders.forEach(element => element.remove())
 
-    const taskItemEditor = `
+    let taskEditorHTMLString = `
         <div class="task-editor">
             <div class="task-editor-area">
                 <div class="task-editor-input">
-                    <!-- <input type="text" class="input-field" placeholder="Task name"> -->
-                    <div class="input-field" contenteditable="true" role="textbox" aria-readonly="false" aria-multiline="true" aria-label="Task name" translate="no" tabindex="0">
-                        <span placeholder="Task name" class="input-text">
-                             <br class="line-break">
-                        </span>
-                    </div>
+                    <div class="input-field" contenteditable="true" role="textbox" aria-readonly="false" aria-multiline="true" aria-label="Task name" translate="no" tabindex="0"><span placeholder="Task name" class="input-text"><br class="line-break"></span></div>
                 </div>
             </div>
             <div class="task-editor-footer">
@@ -240,8 +242,10 @@ function addPreviewTask(event) {
             </div>
         </div>
     `
+    const taskItemEditor = createHTMLelement(taskEditorHTMLString)
+
     const sectionInnerContent = section.querySelector('.section-inner-content')
-    sectionInnerContent.insertAdjacentHTML('beforeend', taskItemEditor);
+    sectionInnerContent.appendChild(taskItemEditor)
 
     const inputField = sectionInnerContent.querySelector('.input-field')
     inputField.focus()
@@ -252,20 +256,25 @@ function addPreviewTask(event) {
     startObserving(inputField)
 }
 
+const inputField = document.querySelector('.input-field')
+startObserving(inputField)
 
-
-const startObserving = (domNode) => {
+function startObserving(domNode) {
     const observer = new MutationObserver(mutations => {
         mutations.forEach(function (mutation) {
             console.log('----------------------')
-            console.log('type: ', mutation.type)
-            console.log('removedNodes => ', Array.from(mutation.removedNodes));
+            console.log('TYPE => ', mutation.type)
             if (mutation.removedNodes.length !== 0) {
+                console.log('removedNodes => ', Array.from(mutation.removedNodes));
                 console.log('removed: ', mutation.removedNodes[0])
             }
-            console.log('addedNodes  => ', Array.from(mutation.addedNodes));
             if (mutation.addedNodes.length !== 0) {
+                console.log('addedNodes  => ', Array.from(mutation.addedNodes));
                 console.log('added: ', mutation.addedNodes[0])
+
+                if (mutation.addedNodes[0].tagName === 'BR') {
+                    mutation.addedNodes[0].setAttribute('class', 'line-break')
+                }
             }
     
             const elementRemoved = Array.from(
@@ -277,6 +286,9 @@ const startObserving = (domNode) => {
 
                 return false;
             });
+            console.log('target: ', mutation.target)
+            // console.log('oldValue: ', mutation.oldValue)
+            // console.log('attr: ', mutation.attributeNamespace)
     
             if (elementRemoved) {
                 console.log('The element was removed from the DOM');
@@ -297,13 +309,27 @@ const startObserving = (domNode) => {
 };
 
 function resetInputField(inputField, removedNodes) {
-    console.log('reset => ', removedNodes, removedNodes[0])
-    // MUdar: talvez melhorar
-    // if (removedNodes[0].classList.contains('input-text')) {
-    //     inputField.appendChild(removedNodes[0])
-    // } else if (removedNodes[0].classList.contains('line-break')) {
-    //     document.querySelector('.input-text').appendChild(removedNodes[0])
-    // }
+    console.log('reset => ', removedNodes, removedNodes[0], removedNodes[0].tagName)
+    // Mudar: melhorar
+    const span = document.createElement('span')
+    span.setAttribute('class', 'input-text')
+    span.setAttribute('placeholder', 'Task name')
+
+    const br = document.createElement('br')
+
+    if (removedNodes[0].tagName === "BR") {
+        if (inputField.textContent) return
+        console.log('create BR')
+        document.querySelector('.input-text').appendChild(br)   
+    } else if (removedNodes[0].tagName === "SPAN") {
+        console.log('create SPAN')
+        inputField.appendChild(span)
+        
+        if (span.hasChildNodes()) return
+        span.appendChild(br)
+    } else {
+        console.log("=== ERROR === -> ANOTHER TAGNAME")
+    }
 }
 
 
@@ -340,6 +366,9 @@ function setTaskEditorEventListeners(taskEditor) {
     })
 
     taskEditor.querySelector('.input-field').addEventListener('keydown', (event) => {    
+        if (!taskEditor.querySelector('.input-field').textContent && event.key === "Backspace") {
+            event.preventDefault()
+        }
         // console.log(taskEditor, event, event.key)
         if (event.key !== 'Enter') return
         handleEnterTaskName(taskEditor)
