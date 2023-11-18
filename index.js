@@ -133,7 +133,7 @@ function addPreviewSection() {
         <div class="section-editor">
             <div class="section-editor-input">
                 <!-- <input type="text" class="input-field" placeholder="Section name"> -->
-                <div contenteditable="true" class="input-field" placeholder="Section Name"></div>
+                <input class="input-field" placeholder="Section Name">
             </div>
             <div class="section-editor-footer">
                 <input type="button" class="cancel-button default-button" value="cancel">
@@ -175,7 +175,7 @@ function createSectionItem(sectionName, sectionId) {
             </div>
         </div>
     `
-    const sectionList = document.querySelector('.project-board')
+    const sectionList = document.querySelector('.sections-list')
     sectionList.insertAdjacentHTML('beforeend', newSection)
 }
 
@@ -229,7 +229,7 @@ function addPreviewTask(event) {
         <div class="task-editor">
             <div class="task-editor-area">
                 <div class="task-editor-input">
-                    <div class="input-field" contenteditable="true" role="textbox" aria-readonly="false" aria-multiline="true" aria-label="Task name" translate="no" tabindex="0"><span placeholder="Task name" class="input-text"><br class="line-break"></span></div>
+                    <input class="input-field" placeholder="Task name">
                 </div>
             </div>
             <div class="task-editor-footer">
@@ -252,122 +252,7 @@ function addPreviewTask(event) {
     
     const taskEditor = document.querySelector('.task-editor')
     setTaskEditorEventListeners(taskEditor)
-
-    document.addEventListener('copy', event => {
-        console.log('copy => ', event.target)
-    })
-    document.addEventListener('paste', e => {
-        e.preventDefault();
-
-        // Get the clipboard data as plain text
-        var text = (e.originalEvent || e).clipboardData.getData('text/plain');
-        console.log('text => ', text)
-    
-        // Remove HTML tags from the text
-        var cleanText = stripHtmlTags(text);
-        console.log('cleanText => ', cleanText)
-        
-        // Get the selection and create a range
-        var selection = window.getSelection();
-        console.log('selection => ', selection)
-        
-        var range = selection.getRangeAt(0);
-        console.log('range1 => ', range)
-        
-        // Delete the existing content in the range
-        if (!selection.isCollapsed) {
-            range.deleteContents();
-            console.log('range2 => ', range)
-        };
-    
-        // Insert the cleaned text into the range
-        range.insertNode(document.createTextNode(cleanText));
-    });
-    
-    function stripHtmlTags(html) {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || "";
-    }
-    
-    startObserving(inputField)
 }
-
-const inputField = document.querySelector('.input-field')
-startObserving(inputField)
-
-function startObserving(domNode) {
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(function (mutation) {
-            console.log('----------------------')
-            console.log('TYPE => ', mutation.type)
-            if (mutation.removedNodes.length !== 0) {
-                console.log('removedNodes => ', Array.from(mutation.removedNodes));
-                console.log('removed: ', mutation.removedNodes[0])
-            }
-            if (mutation.addedNodes.length !== 0) {
-                console.log('addedNodes  => ', Array.from(mutation.addedNodes));
-                console.log('added: ', mutation.addedNodes[0])
-
-                if (mutation.addedNodes[0].tagName === 'BR') {
-                    mutation.addedNodes[0].setAttribute('class', 'line-break')
-                }
-            }
-    
-            const elementRemoved = Array.from(
-                mutation.removedNodes,
-            ).some(element => {
-                if (element.classList) {
-                    return true
-                }
-
-                return false;
-            });
-            console.log('target: ', mutation.target)
-            // console.log('oldValue: ', mutation.oldValue)
-            // console.log('attr: ', mutation.attributeNamespace)
-    
-            if (elementRemoved) {
-                console.log('The element was removed from the DOM');
-                resetInputField(domNode, mutation.removedNodes)
-            }
-        });
-    });
-    
-    observer.observe(domNode, {
-    childList: true,
-    attributes: true,
-    characterData: true,
-    subtree: true,
-    });
-    
-    
-    return observer;
-};
-
-function resetInputField(inputField, removedNodes) {
-    console.log('reset => ', removedNodes, removedNodes[0], removedNodes[0].tagName)
-    // Mudar: melhorar
-    const span = document.createElement('span')
-    span.setAttribute('class', 'input-text')
-    span.setAttribute('placeholder', 'Task name')
-
-    const br = document.createElement('br')
-
-    if (removedNodes[0].tagName === "BR") {
-        if (inputField.textContent) return
-        console.log('create BR')
-        document.querySelector('.input-text').appendChild(br)   
-    } else if (removedNodes[0].tagName === "SPAN") {
-        console.log('create SPAN')
-        inputField.appendChild(span)
-        
-        if (span.hasChildNodes()) return
-        span.appendChild(br)
-    } else {
-        console.log("=== ERROR === -> ANOTHER TAGNAME")
-    }
-}
-
 
 function createTaskItem(taskName, taskState, taskId, sectionId) {
         const newTask = `
@@ -414,7 +299,7 @@ function setTaskEditorEventListeners(taskEditor) {
 function handleEnterTaskName(taskEditor) {
     const inputField = taskEditor.querySelector('.input-field')
     
-    const taskName = inputField.textContent.trim()
+    const taskName = inputField.value.trim()
     const sectionId = inputField.closest('.project-section').dataset.sectionid
 
     removeTaskEditor(taskEditor)
