@@ -253,6 +253,42 @@ function addPreviewTask(event) {
     const taskEditor = document.querySelector('.task-editor')
     setTaskEditorEventListeners(taskEditor)
 
+    document.addEventListener('copy', event => {
+        console.log('copy => ', event.target)
+    })
+    document.addEventListener('paste', e => {
+        e.preventDefault();
+
+        // Get the clipboard data as plain text
+        var text = (e.originalEvent || e).clipboardData.getData('text/plain');
+        console.log('text => ', text)
+    
+        // Remove HTML tags from the text
+        var cleanText = stripHtmlTags(text);
+        console.log('cleanText => ', cleanText)
+        
+        // Get the selection and create a range
+        var selection = window.getSelection();
+        console.log('selection => ', selection)
+        
+        var range = selection.getRangeAt(0);
+        console.log('range1 => ', range)
+        
+        // Delete the existing content in the range
+        if (!selection.isCollapsed) {
+            range.deleteContents();
+            console.log('range2 => ', range)
+        };
+    
+        // Insert the cleaned text into the range
+        range.insertNode(document.createTextNode(cleanText));
+    });
+    
+    function stripHtmlTags(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+    }
+    
     startObserving(inputField)
 }
 
