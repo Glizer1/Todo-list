@@ -9,6 +9,10 @@ let sectionsDb = [
     { id: '1', name: "Section 2" }
 ]
 
+// -drag and drop system
+// -create local storage system
+// -style
+
 // -- backEnd --
  
 // CRUD:
@@ -450,6 +454,80 @@ function deleteSectionItem(event) {
     updateProjectBoard()
 }
 
+// drag & drop system
+// -mousedown: dragStart
+// -mousemove: onDrag 
+// -mouseenter/mouseover + mouseleave/mouseout (style)
+// -mouseup: drop
+
+let draggedElement = null
+let dragging = false
+
+function dragStart(event) {
+    const target = event.target
+    const taskTarget = target.closest('.task')
+
+    if (!taskTarget) return
+    draggedElement = taskTarget
+    console.log(taskTarget)
+
+    document.addEventListener('mousemove', onDrag)
+    document.addEventListener('mouseup', drop)
+}
+
+// errors: 
+// -removing the draggedElement
+
+function onDrag(event) {
+    const target = event.target
+    const taskTarget = target.closest('.task')
+
+    if (!taskTarget) return
+    const rect = taskTarget.getBoundingClientRect()
+    const offsetY = event.clientY - rect.top
+    const percentage = offsetY / rect.height
+
+    console.log(dragging)
+    if (!dragging) {
+        document.body.appendChild(draggedElement)
+    }
+    dragging = true
+
+    console.log('dragging: ', rect, offsetY, percentage)
+}
+
+function drop(event) {
+    document.removeEventListener('mousemove', onDrag)
+    document.removeEventListener('mouseup', drop)
+
+    if (draggedElement) {
+        console.log(draggedElement)
+        document.body.removeChild(draggedElement)
+    }
+
+    const target = event.target
+    const taskTarget = target.closest('.task')
+    if (!taskTarget) return
+
+    const rect = taskTarget.getBoundingClientRect()
+    const offsetY = event.clientY - rect.top
+    const percentage = offsetY / rect.height
+    console.log('drop: ', taskTarget, rect, percentage)
+
+    // drop on area
+    const div = document.createElement('div')
+    if (percentage <= 0.5) {
+        console.log('em cima')
+        taskTarget.insertAdjacentElement('beforebegin', div)
+    } else {
+        console.log('em baixo')
+        taskTarget.insertAdjacentElement('afterend', div)
+    }
+
+    dragging = false
+    draggedElement = null
+}
+
 // outros
 
 function removeEventListeners(input) {
@@ -474,6 +552,8 @@ updateProjectBoard()
 
 //inputs
 const projectBoard = document.querySelector('.project-board')
+projectBoard.addEventListener('mousedown', dragStart)
+
 projectBoard.addEventListener('dblclick', (event) => {
     const target = event.target
 
