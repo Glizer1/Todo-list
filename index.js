@@ -1,12 +1,17 @@
 let tasksDb = [
-    { id: '0', name: "Task 1", state: '', sectionId: '0' },
-    { id: '1', name: "Task 2", state: 'checked', sectionId: '0' },
-    { id: '2', name: "Task 1", state: '', sectionId: '1' }
+    { id: 'A', name: "Task 1", state: '', sectionId: 'A', order: 1 },
+    { id: 'B', name: "Task 2", state: 'checked', sectionId: 'A', order: 2 },
+    { id: 'C', name: "Task 3", state: '', sectionId: 'A', order: 3 },
+    { id: 'D', name: "Task 4", state: '', sectionId: 'A', order: 4 },
+    { id: 'E', name: "Task 5", state: 'checked', sectionId: 'A', order: 5 },
+    { id: 'F', name: "Task 6", state: '', sectionId: 'B', order: 1 },
+    { id: 'G', name: "Task 7", state: 'checked', sectionId: 'B', order: 2 },
+    { id: 'H', name: "Task 8", state: '', sectionId: 'B', order: 3 }
 ]
 
 let sectionsDb = [
-    { id: '0', name: "Section 1" },
-    { id: '1', name: "Section 2" }
+    { id: 'A', name: "Section 1", order: 1 },
+    { id: 'B', name: "Section 2", order: 2 }
 ]
 
 // -drag and drop system
@@ -81,17 +86,37 @@ function toggleTaskState(taskId) {
     console.log("toggleTaskState => ", tasksDb[findTaskIndex])
 }
 
-function changeTaskSection(taskId, sectionId) {
-    const findSection = sectionsDb.find(section => sectionId === section.id)
-    if (!findSection) return
-
+function changeItemPosition(newOrder, taskId, sectionId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
-    tasksDb[findTaskIndex].sectionId = sectionId
-    console.log("changeTaskSection => ", tasksDb[findTaskIndex])
-}
+    const taskSelected = tasksDb[findTaskIndex]
+        
+    const filterBySection = tasksDb.filter(task => task.sectionId === sectionId && task.id !== taskId)
+    if (newOrder > taskSelected.order) {
+        filterBySection.forEach(task => {
+            if (task.order > newOrder) return
+            task.order -= 1;
+        });
+    } else {
+        filterBySection.forEach(task => {
+            if (task.order < newOrder || task.order >= taskSelected.order) return
+            task.order += 1;
+        });
+    }
 
+    if (sectionId !== taskSelected.sectionId) {
+        const filterByOriginSection = tasksDb.filter(task => task.sectionId === taskSelected.sectionId && task.id !== taskId)
+        filterByOriginSection.forEach(task => {
+            if (task.order <= taskSelected.order) return
+            task.order -= 1;
+        });   
+    }
+
+    taskSelected.order = newOrder;
+    taskSelected.sectionId = sectionId;
+    console.log(tasksDb)
+}
 
 function deleteTask(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
@@ -258,9 +283,9 @@ function addPreviewTask(event) {
     setTaskEditorEventListeners(taskEditor)
 }
 
-function createTaskItem(taskName, taskState, taskId, sectionId) {
+function createTaskItem(taskName, taskState, taskId, taskOrder, sectionId) {
         const newTask = `
-            <li class="task" data-taskId="${taskId}">
+            <li class="task" data-taskId="${taskId}" data-order="${taskOrder}">
                 <input type="checkbox" class="task-checkbox" ${taskState}>
                 <div class="task-title">
                     <span class="task-text">${taskName}</span>
@@ -462,70 +487,115 @@ function deleteSectionItem(event) {
 
 let draggedElement = null
 let dragging = false
+let initialX = 0
+let initialY = 0
 
 function dragStart(event) {
     const target = event.target
     const taskTarget = target.closest('.task')
 
     if (!taskTarget) return
-    draggedElement = taskTarget
+    // draggedElement = taskTarget
+    draggedElement = taskTarget.cloneNode(true)
     console.log(taskTarget)
+    const rect = taskTarget.getBoundingClientRect()
+    initialX = event.clientX - rect.left
+    initialY = event.clientY - rect.top
 
     document.addEventListener('mousemove', onDrag)
     document.addEventListener('mouseup', drop)
 }
 
-// errors: 
-// -removing the draggedElement
-
 function onDrag(event) {
     const target = event.target
-    const taskTarget = target.closest('.task')
 
-    if (!taskTarget) return
-    const rect = taskTarget.getBoundingClientRect()
-    const offsetY = event.clientY - rect.top
-    const percentage = offsetY / rect.height
-
-    console.log(dragging)
+    if (!target) return
+    const taskList = target.closest('.task-list')
     if (!dragging) {
         document.body.appendChild(draggedElement)
+        document.body.classList.add('dragging')
+        draggedElement.classList.add('dragged-element')
+
+        const div = document.createElement('div')
+        div.setAttribute('class', 'dragging-preview')
+        console.log(draggedElement.dataset.taskid)
+        const taskSelected = taskList.querySelector(`[data-taskId="${draggedElement.dataset.taskid}"]`)
+        console.log(taskSelected)
+
+        taskList.replaceChild(div, taskSelected)
+
+        // taskTarget.insertAdjacentElement('beforebegin', div)
     }
+    draggedElement.style.left = event.clientX - initialX + "px"
+    draggedElement.style.top =  event.clientY - initialY + "px"
     dragging = true
 
-    console.log('dragging: ', rect, offsetY, percentage)
+    const taskTarget = target.closest('.task-list .task')
+    if (!taskTarget) return
+    const draggingPreview = document.querySelector('.dragging-preview')
+    const previousElement = taskTarget.previousElementSibling
+
+    if (previousElement === null || !previousElement.classList.contains('dragging-preview')) {
+        taskList.insertBefore(draggingPreview, taskTarget)
+    } else {
+        taskList.insertBefore(draggingPreview, taskTarget.nextElementSibling)
+    }
+
+    // const rect = taskTarget.getBoundingClientRect()
+    // const offsetY = event.clientY - rect.top
+    // const percentage = offsetY / rect.height
+
+    // const draggingPreview = document.querySelector('.dragging-preview')
+    // // console.log(draggingPreview)
+    // if (draggingPreview) {
+    //     draggingPreview.remove()
+    // }
+    // const div = document.createElement('div')
+    // div.setAttribute('class', 'dragging-preview')
+    // // console.log('taskTarget: ', taskTarget)
+    // if (percentage <= 0.5) {
+    //     taskTarget.insertAdjacentElement('beforebegin', div)
+
+    // } else {
+    //     taskTarget.insertAdjacentElement('afterend', div)
+    // }
+    // console.log('dragging: ', rect, offsetY, percentage)
 }
 
 function drop(event) {
     document.removeEventListener('mousemove', onDrag)
     document.removeEventListener('mouseup', drop)
+    const draggingPreview = document.querySelector('.dragging-preview')
+
+    const target = event.target
+    const taskTarget = target.closest('.task-list .task') || target.closest('.task-list .dragging-preview')
+    if (taskTarget) {
+        const sectionId = taskTarget.closest('.project-section').dataset.sectionid
+        const taskId = draggedElement.dataset.taskid
+        
+        const next = draggingPreview.nextElementSibling || draggingPreview.previousElementSibling
+        console.log(draggingPreview.nextElementSibling, next)
+        const targetOrder = Number(next.dataset.order)
+        console.log(targetOrder)
+
+
+        changeItemPosition(targetOrder, taskId, sectionId)
+    }
 
     if (draggedElement) {
         console.log(draggedElement)
-        document.body.removeChild(draggedElement)
+        // document.body.removeChild(draggedElement)
+        draggedElement.remove()
     }
 
-    const target = event.target
-    const taskTarget = target.closest('.task')
-    if (!taskTarget) return
-
-    const rect = taskTarget.getBoundingClientRect()
-    const offsetY = event.clientY - rect.top
-    const percentage = offsetY / rect.height
-    console.log('drop: ', taskTarget, rect, percentage)
-
-    // drop on area
-    const div = document.createElement('div')
-    if (percentage <= 0.5) {
-        console.log('em cima')
-        taskTarget.insertAdjacentElement('beforebegin', div)
-    } else {
-        console.log('em baixo')
-        taskTarget.insertAdjacentElement('afterend', div)
+    if (draggingPreview) {
+        draggingPreview.remove()
     }
 
     dragging = false
     draggedElement = null
+    
+    updateProjectBoard()
 }
 
 // outros
@@ -545,7 +615,9 @@ function clearProjectBoard() {
 function updateProjectBoard() {
     clearProjectBoard()
     sectionsDb.forEach(section => createSectionItem(section.name, section.id))
-    tasksDb.forEach(task => createTaskItem(task.name, task.state, task.id, task.sectionId))
+    const sortedTasks = Array.from(tasksDb).sort((a, b) => a.order - b.order)
+    console.log(sortedTasks, tasksDb)
+    sortedTasks.forEach(task => createTaskItem(task.name, task.state, task.id, task.order, task.sectionId))
 }
 
 updateProjectBoard()
