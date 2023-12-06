@@ -450,6 +450,7 @@ function handleRenameTask(event) {
 // toggle task state
 function toggleTaskItemState(event) {
     const target = event.target
+    console.log(target)
     const taskId = target.closest('.task').dataset.taskid
 
     toggleTaskState(taskId)
@@ -518,9 +519,9 @@ function onDrag(event) {
 
         const div = document.createElement('div')
         div.setAttribute('class', 'dragging-preview')
-        console.log(draggedElement.dataset.taskid)
+        // console.log(draggedElement.dataset.taskid)
         const taskSelected = taskList.querySelector(`[data-taskId="${draggedElement.dataset.taskid}"]`)
-        console.log(taskSelected)
+        // console.log(taskSelected)
 
         taskList.replaceChild(div, taskSelected)
 
@@ -540,51 +541,42 @@ function onDrag(event) {
     } else {
         taskList.insertBefore(draggingPreview, taskTarget.nextElementSibling)
     }
-
-    // const rect = taskTarget.getBoundingClientRect()
-    // const offsetY = event.clientY - rect.top
-    // const percentage = offsetY / rect.height
-
-    // const draggingPreview = document.querySelector('.dragging-preview')
-    // // console.log(draggingPreview)
-    // if (draggingPreview) {
-    //     draggingPreview.remove()
-    // }
-    // const div = document.createElement('div')
-    // div.setAttribute('class', 'dragging-preview')
-    // // console.log('taskTarget: ', taskTarget)
-    // if (percentage <= 0.5) {
-    //     taskTarget.insertAdjacentElement('beforebegin', div)
-
-    // } else {
-    //     taskTarget.insertAdjacentElement('afterend', div)
-    // }
-    // console.log('dragging: ', rect, offsetY, percentage)
 }
 
-function drop(event) {
+function drop() {
     document.removeEventListener('mousemove', onDrag)
     document.removeEventListener('mouseup', drop)
     const draggingPreview = document.querySelector('.dragging-preview')
 
-    const target = event.target
-    const taskTarget = target.closest('.task-list .task') || target.closest('.task-list .dragging-preview')
-    if (taskTarget) {
-        const sectionId = taskTarget.closest('.project-section').dataset.sectionid
+    if (draggingPreview) {
+        const sectionId = draggingPreview.closest('.project-section').dataset.sectionid
         const taskId = draggedElement.dataset.taskid
-        
-        const next = draggingPreview.nextElementSibling || draggingPreview.previousElementSibling
-        console.log(draggingPreview.nextElementSibling, next)
-        const targetOrder = Number(next.dataset.order)
-        console.log(targetOrder)
+        const taskOrder = Number(draggedElement.dataset.order)
 
+        // mudar: criar um element antes da propria task com orders
+        const previousPreviewElement = draggingPreview.previousElementSibling
+        const nextPreviewElement = draggingPreview.nextElementSibling
+        let newTargetOrder;
 
-        changeItemPosition(targetOrder, taskId, sectionId)
+        const isPreviousElementNull = previousPreviewElement === null
+        const isNextElementNull = nextPreviewElement === null
+        // console.log(isPreviousElementNull, isNextElementNull)
+
+        let isPreviousElementOrderGreater = false
+        let isNextElementOrderLess = false
+        if (!isPreviousElementNull && !isNextElementNull) {
+            isPreviousElementOrderGreater = Number(previousPreviewElement.dataset.order) > taskOrder
+            isNextElementOrderLess = Number(nextPreviewElement.dataset.order) < taskOrder
+        }
+        // console.log(isPreviousElementOrderGreater, isNextElementOrderLess)
+
+        newTargetOrder = isPreviousElementNull || isNextElementOrderLess ?  nextPreviewElement.dataset.order : previousPreviewElement.dataset.order
+        // console.log(newTargetOrder)
+
+        changeItemPosition(Number(newTargetOrder), taskId, sectionId)
     }
 
     if (draggedElement) {
-        console.log(draggedElement)
-        // document.body.removeChild(draggedElement)
         draggedElement.remove()
     }
 
