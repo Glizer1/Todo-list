@@ -14,7 +14,7 @@ let sectionsDb = [
     { id: 'B', name: "Section 2", order: 2 }
 ]
 
-// -drag and drop system
+// -drag and dropTaskItem system
 // -create local storage system
 // -style
 
@@ -181,27 +181,29 @@ function addPreviewSection() {
     setSectionEditorEventListeners(sectionEditor)
 }
 
-function createSectionItem(sectionName, sectionId) {
+function createSectionItem(sectionName, sectionId, sectionOrder) {
     const newSection = `
-        <div class="project-section" data-sectionId="${sectionId}">
-            <div class="section-header">
-                <div class="section-title">
-                    <span class="section-text">${sectionName}</span>
+        <div class="project-section" data-sectionId="${sectionId}" data-order="${sectionOrder}">
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-text">${sectionName}</span>
+                    </div>
+                    <div class="delete-section-content">
+                        <button type="button" class="delete-section-button default-button">
+                            <span class="text-button">Delete</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="delete-section-content">
-                    <button type="button" class="delete-section-button default-button">
-                        <span class="text-button">Delete</span>
-                    </button>
+                <div class="section-inner-content">
+                    <ul class="task-list"></ul>
+                    <div class="task-adder">
+                        <button type="button" class="add-task-button default-button">
+                            <span class="text-button">Add task</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="section-inner-content">
-                <ul class="task-list"></ul>
-                <div class="task-adder">
-                    <button type="button" class="add-task-button default-button">
-                        <span class="text-button">Add task</span>
-                    </button>
                 </div>
-            </div>
         </div>
     `
     const sectionList = document.querySelector('.sections-list')
@@ -285,19 +287,21 @@ function addPreviewTask(event) {
 
 function createTaskItem(taskName, taskState, taskId, taskOrder, sectionId) {
         const newTask = `
-            <li class="task" data-taskId="${taskId}" data-order="${taskOrder}">
-                <input type="checkbox" class="task-checkbox" ${taskState}>
-                <div class="task-title">
-                    <span class="task-text">${taskName}</span>
-                </div>
-                <div class="task-tools">
-                    <div class="delete-task-content">
-                        <button type="button" class="delete-task-button default-button">
-                            <span class="text-button">Delete</span>
-                        </button>
+            <div class="box-item" data-order="${taskOrder}">
+                <li class="task" data-taskId="${taskId}">
+                    <input type="checkbox" class="task-checkbox" ${taskState}>
+                    <div class="task-title">
+                        <span class="task-text">${taskName}</span>
                     </div>
-                </div>
-            </li>
+                    <div class="task-tools">
+                        <div class="delete-task-content">
+                            <button type="button" class="delete-task-button default-button">
+                                <span class="text-button">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            </div>
         `
 
         const section = document.querySelector(`[data-sectionId="${sectionId}"]`)
@@ -480,18 +484,18 @@ function deleteSectionItem(event) {
     updateProjectBoard()
 }
 
-// drag & drop system
-// -mousedown: dragStart
-// -mousemove: onDrag 
+// drag & dropTaskItem system
+// -mousedown: dragTaskStart
+// -mousemove: dragTask 
 // -mouseenter/mouseover + mouseleave/mouseout (style)
-// -mouseup: drop
+// -mouseup: dropTaskItem
 
 let draggedElement = null
 let dragging = false
 let initialX = 0
 let initialY = 0
 
-function dragStart(event) {
+function dragTaskStart(event) {
     const target = event.target
     const taskTarget = target.closest('.task')
 
@@ -503,35 +507,29 @@ function dragStart(event) {
     initialX = event.clientX - rect.left
     initialY = event.clientY - rect.top
 
-    document.addEventListener('mousemove', onDrag)
-    document.addEventListener('mouseup', drop)
+    document.addEventListener('mousemove', dragTask)
+    document.addEventListener('mouseup', dropTaskItem)
 }
 
-function onDrag(event) {
-    const target = event.target
 
+function dragTask(event) {
+    const target = event.target
     if (!target) return
+
     const taskList = target.closest('.task-list')
     if (!dragging) {
         document.body.appendChild(draggedElement)
         document.body.classList.add('dragging')
         draggedElement.classList.add('dragged-element')
 
-        const div = document.createElement('div')
-        div.setAttribute('class', 'dragging-preview')
-        // console.log(draggedElement.dataset.taskid)
         const taskSelected = taskList.querySelector(`[data-taskId="${draggedElement.dataset.taskid}"]`)
-        // console.log(taskSelected)
-
-        taskList.replaceChild(div, taskSelected)
-
-        // taskTarget.insertAdjacentElement('beforebegin', div)
+        taskSelected.parentElement.classList.add('dragging-preview')
     }
     draggedElement.style.left = event.clientX - initialX + "px"
     draggedElement.style.top =  event.clientY - initialY + "px"
     dragging = true
 
-    const taskTarget = target.closest('.task-list .task')
+    const taskTarget = target.closest('.task-list .box-item')
     if (!taskTarget) return
     const draggingPreview = document.querySelector('.dragging-preview')
     const previousElement = taskTarget.previousElementSibling
@@ -543,9 +541,109 @@ function onDrag(event) {
     }
 }
 
-function drop() {
-    document.removeEventListener('mousemove', onDrag)
-    document.removeEventListener('mouseup', drop)
+function dropTaskItem() {
+    document.removeEventListener('mousemove', dragTask)
+    document.removeEventListener('mouseup', dropTaskItem)
+    const draggingPreview = document.querySelector('.dragging-preview')
+
+    if (draggingPreview) {
+        const sectionId = draggingPreview.closest('.project-section').dataset.sectionid
+        const taskId = draggingPreview.firstElementChild.dataset.taskid
+        const taskOrder = Number(draggingPreview.dataset.order)
+
+        const previousPreviewElement = draggingPreview.previousElementSibling
+        const nextPreviewElement = draggingPreview.nextElementSibling
+        console.log(previousPreviewElement, nextPreviewElement)
+        let newTargetOrder;
+
+        const isPreviousElementNull = previousPreviewElement === null
+        const isNextElementNull = nextPreviewElement === null
+        console.log(isPreviousElementNull, isNextElementNull)
+
+        let isPreviousElementOrderGreater = false
+        let isNextElementOrderLess = false
+        if (!isPreviousElementNull && !isNextElementNull) {
+            isPreviousElementOrderGreater = Number(previousPreviewElement.dataset.order) > taskOrder
+            console.log('taskOrder, ', taskOrder)
+            isNextElementOrderLess = Number(nextPreviewElement.dataset.order) < taskOrder
+        }
+        console.log(isPreviousElementOrderGreater, isNextElementOrderLess)
+
+        newTargetOrder = isPreviousElementNull || isNextElementOrderLess ?  nextPreviewElement.dataset.order : previousPreviewElement.dataset.order
+        // console.log(newTargetOrder)
+
+        console.log(newTargetOrder)
+        changeItemPosition(Number(newTargetOrder), taskId, sectionId)
+    }
+
+    if (draggedElement) {
+        draggedElement.remove()
+    }
+
+    if (draggingPreview) {
+        draggingPreview.remove()
+    }
+
+    dragging = false
+    draggedElement = null
+    
+    updateProjectBoard()
+}
+
+// DragAndDrop section
+
+function dragSectionStart(event) {
+    const target = event.target
+    const sectionTarget = target.closest('.section-header')
+
+    if (!sectionTarget) return
+    const section = sectionTarget.closest('.project-section')
+    draggedElement = sectionTarget.cloneNode(true)
+    draggedElement.setAttribute('data-sectionId', section.dataset.sectionid)
+    draggedElement.setAttribute('data-order', section.dataset.order)
+
+    console.log(sectionTarget)
+    const rect = sectionTarget.getBoundingClientRect()
+    initialX = event.clientX - rect.left
+    initialY = event.clientY - rect.top
+
+    document.addEventListener('mousemove', dragSection)
+    document.addEventListener('mouseup', dropSectionItem)
+}
+
+function dragSection(event) {
+    const target = event.target
+    if (!target) return
+
+    const sectionList = target.closest('.sections-list')
+    if (!dragging) {
+        console.log(sectionList, draggedElement)
+        document.body.appendChild(draggedElement)
+        document.body.classList.add('dragging')
+        draggedElement.classList.add('dragged-element')
+
+        const sectionSelected = sectionList.querySelector(`[data-sectionId="${draggedElement.dataset.sectionid}"]`)
+        sectionSelected.setAttribute('class', 'dragging-preview')
+    }
+    draggedElement.style.left = event.clientX - initialX + "px"
+    draggedElement.style.top =  event.clientY - initialY + "px"
+    dragging = true
+
+    const sectionTarget = target.closest('.sections-list .project-section')
+    if (!sectionTarget) return
+    const draggingPreview = document.querySelector('.dragging-preview')
+    const previousElement = sectionTarget.previousElementSibling
+
+    if (previousElement === null || !previousElement.classList.contains('dragging-preview')) {
+        sectionList.insertBefore(draggingPreview, sectionTarget)
+    } else {
+        sectionList.insertBefore(draggingPreview, sectionTarget.nextElementSibling)
+    }
+}
+
+function dropSectionItem() {
+    document.removeEventListener('mousemove', dragSection)
+    document.removeEventListener('mouseup', dropSectionItem)
     const draggingPreview = document.querySelector('.dragging-preview')
 
     if (draggingPreview) {
@@ -606,9 +704,10 @@ function clearProjectBoard() {
 
 function updateProjectBoard() {
     clearProjectBoard()
-    sectionsDb.forEach(section => createSectionItem(section.name, section.id))
+    const sortedSections = Array.from(sectionsDb).sort((a, b) => a.order - b.order)
+    sortedSections.forEach(section => createSectionItem(section.name, section.id, section.order))
+
     const sortedTasks = Array.from(tasksDb).sort((a, b) => a.order - b.order)
-    console.log(sortedTasks, tasksDb)
     sortedTasks.forEach(task => createTaskItem(task.name, task.state, task.id, task.order, task.sectionId))
 }
 
@@ -616,7 +715,8 @@ updateProjectBoard()
 
 //inputs
 const projectBoard = document.querySelector('.project-board')
-projectBoard.addEventListener('mousedown', dragStart)
+projectBoard.addEventListener('mousedown', dragTaskStart)
+projectBoard.addEventListener('mousedown', dragSectionStart)
 
 projectBoard.addEventListener('dblclick', (event) => {
     const target = event.target
