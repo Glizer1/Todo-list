@@ -18,10 +18,6 @@ let sectionsDb = [
     { id: 'D', name: "Section 4", order: 4 },
 ]
 
-// -drag and dropTaskItem system
-// -create local storage system
-// -style
-
 // -- backEnd --
  
 // CRUD:
@@ -526,10 +522,6 @@ function deleteSectionItem(event) {
 }
 
 // drag & dropTaskItem system
-// -mousedown: dragTaskStart
-// -mousemove: dragTask 
-// -mouseenter/mouseover + mouseleave/mouseout (style)
-// -mouseup: dropTaskItem
 
 let draggedElement = null
 let dragging = false
