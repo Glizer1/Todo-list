@@ -1,3 +1,5 @@
+
+
 let tasksDb = [
     { id: 'A', name: "Task 1", state: '', sectionId: 'A', order: 1 },
     { id: 'B', name: "Task 2", state: 'checked', sectionId: 'A', order: 2 },
@@ -11,7 +13,9 @@ let tasksDb = [
 
 let sectionsDb = [
     { id: 'A', name: "Section 1", order: 1 },
-    { id: 'B', name: "Section 2", order: 2 }
+    { id: 'B', name: "Section 2", order: 2 },
+    { id: 'C', name: "Section 3", order: 3 },
+    { id: 'D', name: "Section 4", order: 4 },
 ]
 
 // -drag and dropTaskItem system
@@ -24,8 +28,10 @@ let sectionsDb = [
 function createSection(name) {
     if (typeof name !== 'string') return
 
+    const sectionAmount = sectionsDb.length
+
     const createId = generateId()
-    sectionsDb.push({ id: createId, name: name })
+    sectionsDb.push({ id: createId, name: name, order: sectionAmount +1})
 
     console.log('createSection => ', sectionsDb)
 }
@@ -36,8 +42,10 @@ function createTask(name, sectionId) {
     const findSection = sectionsDb.find(section => sectionId === section.id)
     if (!findSection) return
 
+    const sectionLength = tasksDb.filter(task => task.sectionId === sectionId).length
+
     const createId = generateId()
-    tasksDb.push({ id: createId, name, state: '', sectionId })
+    tasksDb.push({ id: createId, name, state: '', sectionId, order: sectionLength + 1 })
 
     console.log("createTask => ", tasksDb)
 }
@@ -86,23 +94,26 @@ function toggleTaskState(taskId) {
     console.log("toggleTaskState => ", tasksDb[findTaskIndex])
 }
 
-function changeItemPosition(newOrder, taskId, sectionId) {
+function changeTaskPosition(newOrder, taskId, sectionId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
     const taskSelected = tasksDb[findTaskIndex]
         
-    const filterBySection = tasksDb.filter(task => task.sectionId === sectionId && task.id !== taskId)
-    if (newOrder > taskSelected.order) {
-        filterBySection.forEach(task => {
-            if (task.order > newOrder) return
-            task.order -= 1;
-        });
-    } else {
-        filterBySection.forEach(task => {
-            if (task.order < newOrder || task.order >= taskSelected.order) return
-            task.order += 1;
-        });
+    const filterByNewSection = tasksDb.filter(task => task.sectionId === sectionId && task.id !== taskId)
+    console.log(filterByNewSection)
+    if (sectionId === taskSelected.sectionId) {
+        if (newOrder > taskSelected.order) {
+            filterByNewSection.forEach(task => {
+                if (task.order > newOrder || task.order < taskSelected.order) return
+                task.order -= 1;
+            });
+        } else {
+            filterByNewSection.forEach(task => {
+                if (task.order < newOrder || task.order > taskSelected.order) return
+                task.order += 1;
+            });
+        }
     }
 
     if (sectionId !== taskSelected.sectionId) {
@@ -110,12 +121,42 @@ function changeItemPosition(newOrder, taskId, sectionId) {
         filterByOriginSection.forEach(task => {
             if (task.order <= taskSelected.order) return
             task.order -= 1;
-        });   
+        });
+
+        filterByNewSection.forEach(task => {
+            if (task.order < newOrder) return
+            task.order += 1;
+        });
     }
 
     taskSelected.order = newOrder;
     taskSelected.sectionId = sectionId;
     console.log(tasksDb)
+}
+
+function changeSectionPosition(newOrder, sectionId) {
+    const findSectionIndex = findSectionIndexById(sectionId)
+    if (findSectionIndex === false) return
+
+    const sectionSelected = sectionsDb[findSectionIndex]
+        
+    console.log(sectionsDb)
+    if (newOrder > sectionSelected.order) {
+        sectionsDb.forEach(section => {
+            if (section.id === sectionId) return
+            if (section.order > newOrder || section.order < sectionSelected.order) return
+            section.order -= 1;
+        });
+    } else {
+        sectionsDb.forEach(section => {
+            if (section.id === sectionId) return
+            if (section.order < newOrder || section.order > sectionSelected.order) return
+            section.order += 1;
+        });
+        }
+
+    sectionSelected.order = newOrder;
+    console.log(sectionsDb)
 }
 
 function deleteTask(taskId) {
@@ -206,7 +247,7 @@ function createSectionItem(sectionName, sectionId, sectionOrder) {
                 </div>
         </div>
     `
-    const sectionList = document.querySelector('.sections-list')
+    const sectionList = document.querySelector('.section-list')
     sectionList.insertAdjacentHTML('beforeend', newSection)
 }
 
@@ -495,97 +536,143 @@ let dragging = false
 let initialX = 0
 let initialY = 0
 
-function dragTaskStart(event) {
-    const target = event.target
-    const taskTarget = target.closest('.task')
-
-    if (!taskTarget) return
-    // draggedElement = taskTarget
-    draggedElement = taskTarget.cloneNode(true)
-    console.log(taskTarget)
-    const rect = taskTarget.getBoundingClientRect()
-    initialX = event.clientX - rect.left
-    initialY = event.clientY - rect.top
-
-    document.addEventListener('mousemove', dragTask)
-    document.addEventListener('mouseup', dropTaskItem)
+function moveDraggedElement(event) {
+    draggedElement.style.top = `${event.pageY - initialY}px`
+    draggedElement.style.left = `${event.pageX - initialX}px`
 }
 
+function getClosestElement(elementList, clientY) {
+    let closestElement = null
 
-function dragTask(event) {
-    const target = event.target
-    if (!target) return
+    let index = 1
+    for (const element of elementList) {
+        const { bottom } = element.getBoundingClientRect()
+        const offset = clientY - bottom
 
-    const taskList = target.closest('.task-list')
-    if (!dragging) {
-        document.body.appendChild(draggedElement)
-        document.body.classList.add('dragging')
-        draggedElement.classList.add('dragged-element')
-
-        const taskSelected = taskList.querySelector(`[data-taskId="${draggedElement.dataset.taskid}"]`)
-        taskSelected.parentElement.classList.add('dragging-preview')
-    }
-    draggedElement.style.left = event.clientX - initialX + "px"
-    draggedElement.style.top =  event.clientY - initialY + "px"
-    dragging = true
-
-    const taskTarget = target.closest('.task-list .box-item')
-    if (!taskTarget) return
-    const draggingPreview = document.querySelector('.dragging-preview')
-    const previousElement = taskTarget.previousElementSibling
-
-    if (previousElement === null || !previousElement.classList.contains('dragging-preview')) {
-        taskList.insertBefore(draggingPreview, taskTarget)
-    } else {
-        taskList.insertBefore(draggingPreview, taskTarget.nextElementSibling)
-    }
-}
-
-function dropTaskItem() {
-    document.removeEventListener('mousemove', dragTask)
-    document.removeEventListener('mouseup', dropTaskItem)
-    const draggingPreview = document.querySelector('.dragging-preview')
-
-    if (draggingPreview) {
-        const sectionId = draggingPreview.closest('.project-section').dataset.sectionid
-        const taskId = draggingPreview.firstElementChild.dataset.taskid
-        const taskOrder = Number(draggingPreview.dataset.order)
-
-        const previousPreviewElement = draggingPreview.previousElementSibling
-        const nextPreviewElement = draggingPreview.nextElementSibling
-        console.log(previousPreviewElement, nextPreviewElement)
-        let newTargetOrder;
-
-        const isPreviousElementNull = previousPreviewElement === null
-        const isNextElementNull = nextPreviewElement === null
-        console.log(isPreviousElementNull, isNextElementNull)
-
-        let isPreviousElementOrderGreater = false
-        let isNextElementOrderLess = false
-        if (!isPreviousElementNull && !isNextElementNull) {
-            isPreviousElementOrderGreater = Number(previousPreviewElement.dataset.order) > taskOrder
-            console.log('taskOrder, ', taskOrder)
-            isNextElementOrderLess = Number(nextPreviewElement.dataset.order) < taskOrder
+        const isLastElement = index === elementList.length
+        if (offset < 0 || isLastElement) {
+            closestElement = element
+            break
         }
-        console.log(isPreviousElementOrderGreater, isNextElementOrderLess)
-
-        newTargetOrder = isPreviousElementNull || isNextElementOrderLess ?  nextPreviewElement.dataset.order : previousPreviewElement.dataset.order
-        // console.log(newTargetOrder)
-
-        console.log(newTargetOrder)
-        changeItemPosition(Number(newTargetOrder), taskId, sectionId)
+        index++
     }
+
+    return closestElement
+}
+
+function removeDragState(dragFunction, dropfunciton) {
+    document.body.classList.remove('dragging')
 
     if (draggedElement) {
         draggedElement.remove()
     }
 
+    const draggingPreview = document.querySelector('.dragging-preview')
     if (draggingPreview) {
         draggingPreview.remove()
     }
 
     dragging = false
     draggedElement = null
+
+    document.removeEventListener('wheel', moveDraggedElement)
+    
+    if (!dragFunction || !dropfunciton) return
+    document.removeEventListener('mousemove', dragFunction)
+    document.removeEventListener('mouseup', dropfunciton)
+}
+
+// dragAndDrop task
+
+function dragTaskStart(event) {
+    if (event.button !== 0) return
+    
+    const target = event.target
+    const taskTarget = target.closest('.task')
+    if (!taskTarget) return
+    console.log('start')
+
+    draggedElement = taskTarget.cloneNode(true)
+
+    const rect = taskTarget.getBoundingClientRect()
+    initialX = event.clientX - rect.left
+    initialY = event.clientY - rect.top
+
+    document.addEventListener('mousemove', dragTask)
+    document.addEventListener('wheel', moveDraggedElement)
+    }
+
+function dragTask(event) {
+    console.log('drag')
+    if (event.buttons === 0) {
+        removeDragState(dragTask, dropTaskItem)
+        updateProjectBoard()
+        return
+    }
+
+    document.addEventListener('mouseup', dropTaskItem)
+
+    if (!dragging) {
+        document.body.appendChild(draggedElement)
+        document.body.classList.add('dragging')
+        draggedElement.classList.add('dragged-element')
+
+        const taskSelected = document.querySelector(`[data-taskId="${draggedElement.dataset.taskid}"]`)
+        taskSelected.parentElement.classList.add('dragging-preview')
+    }
+
+    moveDraggedElement(event)
+    dragging = true
+
+    // dragging preview
+    const sections = document.querySelectorAll('.project-section')
+    const closestSection = getClosestElement(sections, event.clientY)
+
+    const tasks = closestSection.querySelectorAll('.box-item')
+    const closestTask = getClosestElement(tasks, event.clientY)
+
+    if (!closestTask) return
+    if (closestTask.classList.contains('dragging-preview')) return
+    
+    const draggingPreview = document.querySelector('.dragging-preview')
+
+    const previousElement = closestTask.previousElementSibling
+    const nextElement = closestTask.nextElementSibling
+    
+    const closestTaskRect = closestTask.getBoundingClientRect()
+    const taskOffset = (event.clientY - closestTaskRect.bottom) / closestTaskRect.height
+    const canUsePreviousOffset = taskOffset < 0.5 && !previousElement
+    const canUseNextOffset = taskOffset >= 0.5 && !nextElement
+
+    const isPreviousElementAPreview = previousElement !== null && previousElement.classList.contains('dragging-preview')
+    const isNextElementAPreview = nextElement !== null && nextElement.classList.contains('dragging-preview') 
+    
+    if (canUsePreviousOffset || isNextElementAPreview) {
+        closestTask.parentElement.insertBefore(draggingPreview, closestTask)
+    } else if (canUseNextOffset || isPreviousElementAPreview) {
+        closestTask.parentElement.insertBefore(draggingPreview, closestTask.nextElementSibling)
+    }
+
+    const boxItems = closestSection.querySelectorAll('.box-item')
+    boxItems.forEach((item, index) => {
+        item.setAttribute('data-order', index +1)
+    })
+}
+
+function dropTaskItem(event) {
+    console.log('drop')
+    if (event.button !== 0) return
+
+    const draggingPreview = document.querySelector('.dragging-preview')
+    if (draggingPreview) {
+        const sectionId = draggingPreview.closest('.project-section').dataset.sectionid
+        const taskId = draggingPreview.firstElementChild.dataset.taskid
+        const taskOrder = Number(draggingPreview.dataset.order)
+        
+        changeTaskPosition(taskOrder, taskId, sectionId)
+    }
+    
+    removeDragState(dragTask, dropTaskItem)
     
     updateProjectBoard()
 }
@@ -593,97 +680,95 @@ function dropTaskItem() {
 // DragAndDrop section
 
 function dragSectionStart(event) {
+    if (event.button !== 0) return
+
     const target = event.target
     const sectionTarget = target.closest('.section-header')
-
     if (!sectionTarget) return
-    const section = sectionTarget.closest('.project-section')
-    draggedElement = sectionTarget.cloneNode(true)
-    draggedElement.setAttribute('data-sectionId', section.dataset.sectionid)
-    draggedElement.setAttribute('data-order', section.dataset.order)
+    console.log('start')
 
-    console.log(sectionTarget)
+    draggedElement = sectionTarget.cloneNode(true)
+    const selectedSection = sectionTarget.closest('.project-section')
+    draggedElement.setAttribute('data-sectionId', selectedSection.dataset.sectionid)
+
     const rect = sectionTarget.getBoundingClientRect()
     initialX = event.clientX - rect.left
     initialY = event.clientY - rect.top
 
     document.addEventListener('mousemove', dragSection)
-    document.addEventListener('mouseup', dropSectionItem)
+    document.addEventListener('wheel', moveDraggedElement)
 }
 
 function dragSection(event) {
-    const target = event.target
-    if (!target) return
-
-    const sectionList = target.closest('.sections-list')
+    console.log('drag')
+    if (event.buttons === 0) {
+        removeDragState(dragSection, dropSectionItem)
+        updateProjectBoard()
+        return
+    }
+    
+    document.addEventListener('mouseup', dropSectionItem)
+    
     if (!dragging) {
-        console.log(sectionList, draggedElement)
         document.body.appendChild(draggedElement)
         document.body.classList.add('dragging')
         draggedElement.classList.add('dragged-element')
 
-        const sectionSelected = sectionList.querySelector(`[data-sectionId="${draggedElement.dataset.sectionid}"]`)
-        sectionSelected.setAttribute('class', 'dragging-preview')
+        const sectionSelected = document.querySelector(`[data-sectionId="${draggedElement.dataset.sectionid}"]`)
+        console.log(sectionSelected)
+        sectionSelected.classList.add('dragging-preview')
     }
-    draggedElement.style.left = event.clientX - initialX + "px"
-    draggedElement.style.top =  event.clientY - initialY + "px"
+
+    moveDraggedElement(event)
     dragging = true
 
-    const sectionTarget = target.closest('.sections-list .project-section')
-    if (!sectionTarget) return
-    const draggingPreview = document.querySelector('.dragging-preview')
-    const previousElement = sectionTarget.previousElementSibling
+    // dragging preview
+    const sections = document.querySelectorAll('.project-section')
+    const closestSection = getClosestElement(sections, event.clientY)
 
-    if (previousElement === null || !previousElement.classList.contains('dragging-preview')) {
-        sectionList.insertBefore(draggingPreview, sectionTarget)
-    } else {
-        sectionList.insertBefore(draggingPreview, sectionTarget.nextElementSibling)
+    if (!closestSection) return
+    if (closestSection.classList.contains('dragging-preview')) return
+
+    // Arrumar section system drag and drop
+
+    const draggingPreview = document.querySelector('.dragging-preview')
+
+    const previousElement = closestSection.previousElementSibling
+    const nextElement = closestSection.nextElementSibling
+
+    const closestSectionRect = closestSection.getBoundingClientRect()
+    const sectionOffset = (event.clientY - closestSectionRect.bottom) / closestSectionRect.height
+    const canUsePreviousOffset = sectionOffset < 0.5 && !previousElement
+    const canUseNextOffset = sectionOffset >= 0.5 && !nextElement
+
+    const isPreviousElementAPreview = previousElement !== null && previousElement.classList.contains('dragging-preview')
+    const isNextElementAPreview = nextElement !== null && nextElement.classList.contains('dragging-preview') 
+
+    if (canUsePreviousOffset || isNextElementAPreview) {
+        closestSection.parentElement.insertBefore(draggingPreview, closestSection)
+    } else if (canUseNextOffset || isPreviousElementAPreview) {
+        closestSection.parentElement.insertBefore(draggingPreview, closestSection.nextElementSibling)
     }
+
+    const sectionItems = document.querySelectorAll('.project-section')
+    sectionItems.forEach((item, index) => {
+        item.setAttribute('data-order', index +1)
+    })
 }
 
-function dropSectionItem() {
-    document.removeEventListener('mousemove', dragSection)
-    document.removeEventListener('mouseup', dropSectionItem)
-    const draggingPreview = document.querySelector('.dragging-preview')
+function dropSectionItem(event) {
+    console.log('drop')
+    if (event.button !== 0) return
 
+    const draggingPreview = document.querySelector('.dragging-preview')
     if (draggingPreview) {
         const sectionId = draggingPreview.closest('.project-section').dataset.sectionid
-        const taskId = draggedElement.dataset.taskid
-        const taskOrder = Number(draggedElement.dataset.order)
+        const sectionOrder = Number(draggingPreview.dataset.order)
 
-        // mudar: criar um element antes da propria task com orders
-        const previousPreviewElement = draggingPreview.previousElementSibling
-        const nextPreviewElement = draggingPreview.nextElementSibling
-        let newTargetOrder;
-
-        const isPreviousElementNull = previousPreviewElement === null
-        const isNextElementNull = nextPreviewElement === null
-        // console.log(isPreviousElementNull, isNextElementNull)
-
-        let isPreviousElementOrderGreater = false
-        let isNextElementOrderLess = false
-        if (!isPreviousElementNull && !isNextElementNull) {
-            isPreviousElementOrderGreater = Number(previousPreviewElement.dataset.order) > taskOrder
-            isNextElementOrderLess = Number(nextPreviewElement.dataset.order) < taskOrder
-        }
-        // console.log(isPreviousElementOrderGreater, isNextElementOrderLess)
-
-        newTargetOrder = isPreviousElementNull || isNextElementOrderLess ?  nextPreviewElement.dataset.order : previousPreviewElement.dataset.order
-        // console.log(newTargetOrder)
-
-        changeItemPosition(Number(newTargetOrder), taskId, sectionId)
+        changeSectionPosition(sectionOrder, sectionId)
     }
 
-    if (draggedElement) {
-        draggedElement.remove()
-    }
-
-    if (draggingPreview) {
-        draggingPreview.remove()
-    }
-
-    dragging = false
-    draggedElement = null
+    removeDragState(dragSection, dropSectionItem)
     
     updateProjectBoard()
 }
@@ -732,6 +817,7 @@ projectBoard.addEventListener('dblclick', (event) => {
 
 projectBoard.addEventListener('click', (event) => {
     const target = event.target
+    console.log('click => ', target)
 
     if (target.classList.contains('add-task-button')) {
         addPreviewTask(event)
