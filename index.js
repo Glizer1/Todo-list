@@ -1,22 +1,56 @@
 
+// let tasksDb = [
+//     { id: 'A', name: "Task 1", state: '', sectionId: 'A', order: 1 },
+//     { id: 'B', name: "Task 2", state: 'checked', sectionId: 'A', order: 2 },
+//     { id: 'C', name: "Task 3", state: '', sectionId: 'A', order: 3 },
+//     { id: 'D', name: "Task 4", state: '', sectionId: 'A', order: 4 },
+//     { id: 'E', name: "Task 5", state: 'checked', sectionId: 'A', order: 5 },
+//     { id: 'F', name: "Task 6", state: '', sectionId: 'B', order: 1 },
+//     { id: 'G', name: "Task 7", state: 'checked', sectionId: 'B', order: 2 },
+//     { id: 'H', name: "Task 8", state: '', sectionId: 'B', order: 3 }
+// ]
 
-let tasksDb = [
-    { id: 'A', name: "Task 1", state: '', sectionId: 'A', order: 1 },
-    { id: 'B', name: "Task 2", state: 'checked', sectionId: 'A', order: 2 },
-    { id: 'C', name: "Task 3", state: '', sectionId: 'A', order: 3 },
-    { id: 'D', name: "Task 4", state: '', sectionId: 'A', order: 4 },
-    { id: 'E', name: "Task 5", state: 'checked', sectionId: 'A', order: 5 },
-    { id: 'F', name: "Task 6", state: '', sectionId: 'B', order: 1 },
-    { id: 'G', name: "Task 7", state: 'checked', sectionId: 'B', order: 2 },
-    { id: 'H', name: "Task 8", state: '', sectionId: 'B', order: 3 }
-]
+// let sectionsDb = [
+//     { id: 'A', name: "Section 1", order: 1 },
+//     { id: 'B', name: "Section 2", order: 2 },
+//     { id: 'C', name: "Section 3", order: 3 },
+//     { id: 'D', name: "Section 4", order: 4 },
+// ]
 
-let sectionsDb = [
-    { id: 'A', name: "Section 1", order: 1 },
-    { id: 'B', name: "Section 2", order: 2 },
-    { id: 'C', name: "Section 3", order: 3 },
-    { id: 'D', name: "Section 4", order: 4 },
-]
+const getDb = (dbName) => JSON.parse(localStorage.getItem(dbName)) ?? []
+const setDb = (dbName, db) => localStorage.setItem(dbName, JSON.stringify(db))
+
+function setupDatabases() {
+    const tasksDb = getDb('tasks')
+    if (tasksDb.length === 0) {
+        tasksDb.push(
+            { id: 'A', name: "Task 1", state: '', sectionId: 'A', order: 1 },
+            { id: 'B', name: "Task 2", state: 'checked', sectionId: 'A', order: 2 },
+            { id: 'C', name: "Task 3", state: '', sectionId: 'A', order: 3 },
+            { id: 'D', name: "Task 4", state: '', sectionId: 'A', order: 4 },
+            { id: 'E', name: "Task 5", state: 'checked', sectionId: 'A', order: 5 },
+            { id: 'F', name: "Task 6", state: '', sectionId: 'B', order: 1 },
+            { id: 'G', name: "Task 7", state: 'checked', sectionId: 'B', order: 2 },
+            { id: 'H', name: "Task 8", state: '', sectionId: 'B', order: 3 }
+        )
+        setDb('tasks',tasksDb)
+    }
+
+    const sectionsDb = getDb('sections')
+    if (sectionsDb.length === 0) {
+        sectionsDb.push(
+            { id: 'A', name: "Section 1", order: 1 },
+            { id: 'B', name: "Section 2", order: 2 },
+            { id: 'C', name: "Section 3", order: 3 },
+            { id: 'D', name: "Section 4", order: 4 },
+        )
+        setDb('sections', sectionsDb)        
+    } 
+    console.log(getDb('tasks'), getDb('sections'))
+}
+
+setupDatabases()
+
 
 // -- backEnd --
  
@@ -24,10 +58,13 @@ let sectionsDb = [
 function createSection(name) {
     if (typeof name !== 'string') return
 
+    const sectionsDb = getDb('sections')
     const sectionAmount = sectionsDb.length
 
     const createId = generateId()
     sectionsDb.push({ id: createId, name: name, order: sectionAmount +1})
+
+    setDb('sections', sectionsDb)
 
     console.log('createSection => ', sectionsDb)
 }
@@ -35,19 +72,23 @@ function createSection(name) {
 function createTask(name, sectionId) {
     if (typeof name !== "string") return
 
-    const findSection = sectionsDb.find(section => sectionId === section.id)
-    if (!findSection) return
+    const findSection = findSectionIndexById(sectionId)
+    if (findSection === false) return
 
+    const tasksDb = getDb('tasks')
     const sectionLength = tasksDb.filter(task => task.sectionId === sectionId).length
 
     const createId = generateId()
     tasksDb.push({ id: createId, name, state: '', sectionId, order: sectionLength + 1 })
+    console.log(tasksDb)
+    setDb('tasks', tasksDb)
 
     console.log("createTask => ", tasksDb)
 }
 
 
 function findTaskIndexById(taskId) {
+    const tasksDb = getDb('tasks')
     const findTaskIndex = tasksDb.findIndex(task => taskId === task.id)
     if (findTaskIndex === -1) return false
 
@@ -55,6 +96,7 @@ function findTaskIndexById(taskId) {
 }
 
 function findSectionIndexById(sectionId) {
+    const sectionsDb = getDb('sections')
     const findSectionIndex = sectionsDb.findIndex(section => sectionId === section.id)
     if (findSectionIndex === -1) return false
 
@@ -68,7 +110,10 @@ function renameSection(newName, sectionId) {
     const findSectionIndex = findSectionIndexById(sectionId)
     if (findSectionIndex === false) return
 
+    const sectionsDb = getDb('sections')
     sectionsDb[findSectionIndex].name = newName
+    setDb('sections', sectionsDb)
+
     console.log('renameTask => ', sectionsDb, sectionsDb[findSectionIndex])
 }
 
@@ -78,7 +123,10 @@ function renameTask(newName, taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
+    const tasksDb = getDb('tasks')
     tasksDb[findTaskIndex].name = newName
+    setDb('tasks', tasksDb)
+    
     console.log("renameTask => ", tasksDb, tasksDb[findTaskIndex])
 }
 
@@ -86,7 +134,10 @@ function toggleTaskState(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
+    const tasksDb = getDb('tasks')
     tasksDb[findTaskIndex].state = tasksDb[findTaskIndex].state === '' ? 'checked' : ''
+    setDb('tasks', tasksDb)
+
     console.log("toggleTaskState => ", tasksDb[findTaskIndex])
 }
 
@@ -94,6 +145,7 @@ function changeTaskPosition(newOrder, taskId, sectionId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
+    const tasksDb = getDb('tasks')
     const taskSelected = tasksDb[findTaskIndex]
         
     const filterByNewSection = tasksDb.filter(task => task.sectionId === sectionId && task.id !== taskId)
@@ -127,6 +179,8 @@ function changeTaskPosition(newOrder, taskId, sectionId) {
 
     taskSelected.order = newOrder;
     taskSelected.sectionId = sectionId;
+
+    setDb('tasks', tasksDb)
     console.log(tasksDb)
 }
 
@@ -134,6 +188,7 @@ function changeSectionPosition(newOrder, sectionId) {
     const findSectionIndex = findSectionIndexById(sectionId)
     if (findSectionIndex === false) return
 
+    const sectionsDb = getDb('sections')
     const sectionSelected = sectionsDb[findSectionIndex]
         
     console.log(sectionsDb)
@@ -149,9 +204,11 @@ function changeSectionPosition(newOrder, sectionId) {
             if (section.order < newOrder || section.order > sectionSelected.order) return
             section.order += 1;
         });
-        }
+    }
 
     sectionSelected.order = newOrder;
+    setDb('sections', sectionsDb)
+
     console.log(sectionsDb)
 }
 
@@ -159,7 +216,10 @@ function deleteTask(taskId) {
     const findTaskIndex = findTaskIndexById(taskId)
     if (findTaskIndex === false) return
 
+    const tasksDb = getDb('tasks')
     tasksDb.splice(findTaskIndex, 1)
+    setDb('tasks', tasksDb)
+
     console.log("deleteTask => ", tasksDb)
 }
 
@@ -167,9 +227,14 @@ function deleteSection(sectionId) {
     const findSectionIndex = findSectionIndexById(sectionId)
     if (findSectionIndex === false) return
 
+    const sectionsDb = getDb('sections')
     sectionsDb.splice(findSectionIndex, 1)
+    setDb('sections', sectionsDb)
+    
+    const tasksDb = getDb('tasks')
+    const removedTasks = tasksDb.filter(task => task.sectionId !== sectionId)
+    setDb('tasks', removedTasks)
 
-    tasksDb = tasksDb.filter(task => task.sectionId !== sectionId)
     console.log('deleteSection => ', sectionsDb)
 }
 
@@ -813,9 +878,11 @@ function clearProjectBoard() {
 
 function updateProjectBoard() {
     clearProjectBoard()
+    const sectionsDb = getDb('sections')
     const sortedSections = Array.from(sectionsDb).sort((a, b) => a.order - b.order)
     sortedSections.forEach(section => createSectionItem(section.name, section.id, section.order))
 
+    const tasksDb = getDb('tasks')
     const sortedTasks = Array.from(tasksDb).sort((a, b) => a.order - b.order)
     sortedTasks.forEach(task => createTaskItem(task.name, task.state, task.id, task.order, task.sectionId))
 }
