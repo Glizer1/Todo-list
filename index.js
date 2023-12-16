@@ -408,6 +408,10 @@ function showTaskAdders() {
 // renameSection sustem
 function showSectionRenameInput(event) {
     const target = event.target
+    if (!target) return
+
+    projectBoard.removeEventListener('mousedown', dragTaskStart)
+    projectBoard.removeEventListener('mousedown', dragSectionStart)
 
     const renameInput = `
     <input type="text" class="input-field" placeholder="Task name">
@@ -438,17 +442,24 @@ function handleRenameSection(event) {
     const sectionId = inputField.closest('.project-section').dataset.sectionid
 
     inputField.previousElementSibling.style.display = 'block' // Mudar: css
-    inputField.remove()
+    inputField.remove
 
     if (!sectionName) return
     renameSection(sectionName, sectionId)
     updateProjectBoard()
+
+    projectBoard.addEventListener('mousedown', dragTaskStart)
+    projectBoard.addEventListener('mousedown', dragSectionStart)
 }
 
 // renameTask system
 function showTaskRenameInput(event) {
     const target = event.target
-    console.log(target)
+    if (!target) return
+    console.log('showTaskRenameInput => ',  target)
+
+    projectBoard.removeEventListener('mousedown', dragTaskStart)
+    projectBoard.removeEventListener('mousedown', dragSectionStart)
     
     const renameInput = `
         <input type="text" class="input-field" placeholder="Task name">
@@ -486,6 +497,9 @@ function handleRenameTask(event) {
     if (!taskName) return
     renameTask(taskName, taskId)
     updateProjectBoard()
+
+    projectBoard.addEventListener('mousedown', dragTaskStart)
+    projectBoard.addEventListener('mousedown', dragSectionStart)
 }
 
 // toggle task state
@@ -524,6 +538,7 @@ function deleteSectionItem(event) {
 // drag & dropTaskItem system
 
 let draggedElement = null
+let preDragging = false
 let dragging = false
 let initialX = 0
 let initialY = 0
@@ -552,7 +567,14 @@ function getClosestElement(elementList, clientY) {
     return closestElement
 }
 
+function cancelDragging(dragTask, dropTaskItem) {
+    console.log('up')
+    if (dragging) return
+    removeDragEventListeners(dragTask, dropTaskItem)
+}
+
 function removeDragState(dragFunction, dropfunciton) {
+    console.log('remove')
     document.body.classList.remove('dragging')
 
     if (draggedElement) {
@@ -567,6 +589,11 @@ function removeDragState(dragFunction, dropfunciton) {
     dragging = false
     draggedElement = null
 
+    removeDragEventListeners(dragFunction, dropfunciton)
+}
+
+function removeDragEventListeners(dragFunction, dropfunciton) {
+    console.log('remove eventListeners')
     document.removeEventListener('wheel', moveDraggedElement)
     
     if (!dragFunction || !dropfunciton) return
@@ -575,7 +602,6 @@ function removeDragState(dragFunction, dropfunciton) {
 }
 
 // dragAndDrop task
-
 function dragTaskStart(event) {
     if (event.button !== 0) return
     
@@ -590,13 +616,17 @@ function dragTaskStart(event) {
     initialX = event.clientX - rect.left
     initialY = event.clientY - rect.top
 
-    document.addEventListener('mousemove', dragTask)
+    
     document.addEventListener('wheel', moveDraggedElement)
-    }
+    document.addEventListener('mousemove', dragTask)
+    document.addEventListener('mouseup', () => cancelDragging(dragTask, dropTaskItem) , { once: true })
+
+}
 
 function dragTask(event) {
     console.log('drag')
     if (event.buttons === 0) {
+        if (!dragging) return
         removeDragState(dragTask, dropTaskItem)
         updateProjectBoard()
         return
@@ -687,13 +717,15 @@ function dragSectionStart(event) {
     initialX = event.clientX - rect.left
     initialY = event.clientY - rect.top
 
-    document.addEventListener('mousemove', dragSection)
     document.addEventListener('wheel', moveDraggedElement)
+    document.addEventListener('mousemove', dragSection)
+    document.addEventListener('mouseup', () => cancelDragging(dragSection, dropSectionItem) , { once: true })
 }
 
 function dragSection(event) {
     console.log('drag')
     if (event.buttons === 0) {
+        if (!dragging) return
         removeDragState(dragSection, dropSectionItem)
         updateProjectBoard()
         return
@@ -795,8 +827,10 @@ const projectBoard = document.querySelector('.project-board')
 projectBoard.addEventListener('mousedown', dragTaskStart)
 projectBoard.addEventListener('mousedown', dragSectionStart)
 
+
 projectBoard.addEventListener('dblclick', (event) => {
     const target = event.target
+    console.log('dblclick => ', target)
 
     if (target.classList.contains('task-title')) {
         showTaskRenameInput(event)
@@ -809,7 +843,7 @@ projectBoard.addEventListener('dblclick', (event) => {
 
 projectBoard.addEventListener('click', (event) => {
     const target = event.target
-    console.log('click => ', target)
+    // console.log('click => ', target)
 
     if (target.classList.contains('add-task-button')) {
         addPreviewTask(event)
